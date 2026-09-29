@@ -195,8 +195,8 @@ main{max-width:480px;margin:0 auto;padding:12px 14px 110px}
 
 <script>
 // --- SUPABASE CONFIG ---
-const SB_URL = 'https://hgnrczmdmiuxxwynqbjg.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbnJjem1kbWl1eHh3eW5xYmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NzI2ODYsImV4cCI6MjEwNjI0ODY4Nn0.xv0e7ugwzESvHoUD4MJAcDxqTfFxQoKGPeMnmV6JUXs';
+const SB_URL = 'https://hngrczmdmiuxxwynqbig.supabase.co';
+const SB_KEY = 'sb_publishable_2cp47NIT4mPiozzj9Yl-Lw_zdQiQ03u';
 
 let supabase = null;
 function getSB(){
@@ -755,7 +755,7 @@ async function handleAuth(type, em, pw){
       const { data, error } = await sb.auth.signUp({ email: em, password: pw });
       if(error) throw error;
       if(data.user && !data.session){
-        toast('Confirm email sent! Check inbox.');
+        toast('Account created. Please log in.');
       } else {
         currentUser = data.user;
         toast('Account created & logged in!');
