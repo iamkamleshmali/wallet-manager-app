@@ -9,7 +9,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Supabase JS CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#0e0f14;--c1:#171922;--c2:#21243a;--ink:#f5f6fb;--mu:#8b90a5;--ln:#282c3c;--inc:#b6ff5c;--exp:#ff5c93;--acc:#b6ff5c;--on:#101114;
@@ -101,10 +100,19 @@ main{max-width:480px;margin:0 auto;padding:14px 14px 130px}
 <div class="ov" id="ov"></div><div id="tt"></div>
 <div id="lk"><h1>Wallet Manager</h1><div id="lm" style="color:var(--mu)">Enter passcode</div><div class="dots" id="dots"></div><div class="pad" id="pad"></div></div>
 <script>
-// --- SUPABASE CONFIG ---
+// --- SUPABASE CLIENT SETUP (SAFE FALLBACK) ---
 const SB_URL = 'https://hgnrczmdmiuxxwynqbjg.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbnJjem1kbWl1eHh3eW5xYmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NzI2ODYsImV4cCI6MjEwNjI0ODY4Nn0.xv0e7ugwzESvHoUD4MJAcDxqTfFxQoKGPeMnmV6JUXs';
-const supabase = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+
+let supabase = null;
+try {
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabase = window.supabase.createClient(SB_URL, SB_KEY);
+  }
+} catch (e) {
+  console.error('Supabase init failed', e);
+}
+
 let currentUser = null;
 
 const DC={exp:[['Food','🍜'],['Transport','🚌'],['Shopping','🛍️'],['Study','📚'],['Hostel / Rent','🏠'],['Recharge','📱'],['Fun','🎮'],['Health','💊'],['Social Life','👫'],['Other','✨']],inc:[['Pocket Money','💸'],['Salary','💼'],['Freelance','💻'],['Scholarship','🎓'],['Gift','🎁'],['Other','💰']]};
@@ -119,22 +127,22 @@ let S,tab='h',view='l',off=0,st='exp',mode='',sel='',A=null,undo=null,fresh=0;
 function seed(){return{acc:[{id:'a1',name:'Cash in Hand',g:'Cash',open:0},{id:'a2',name:'UPI / Bank',g:'Accounts',open:0}],cats:JSON.parse(JSON.stringify(DC)),bud:{total:0,cat:{}},pin:'',tx:[]}}
 try{S=JSON.parse(localStorage.getItem('gz2'))}catch(e){}S=S||seed();
 
-// --- CLOUD SYNC LOGIC ---
+// --- CLOUD SYNC ---
 let syncTimeout = null;
-async function syncToCloud(){
+function syncToCloud(){
   if(!supabase || !currentUser) return;
   clearTimeout(syncTimeout);
   syncTimeout = setTimeout(async ()=>{
     try{
       await supabase.from('user_data').upsert({
         user_id: currentUser.id,
-        data: S,
+        data: JSON.parse(JSON.stringify(S)),
         updated_at: new Date().toISOString()
       });
     }catch(err){
-      console.error('Cloud save failed:', err);
+      console.error('Cloud sync error:', err);
     }
-  }, 500);
+  }, 400);
 }
 
 async function loadFromCloud(){
@@ -146,13 +154,12 @@ async function loadFromCloud(){
       S = data.data;
       try{localStorage.setItem('gz2', JSON.stringify(S))}catch(e){}
       render();
-      toast('Cloud data synced ✓');
+      toast('Cloud data loaded ✓');
     } else {
-      // First time user, sync local seed data to cloud
       syncToCloud();
     }
   }catch(err){
-    console.error('Cloud load failed:', err);
+    console.error('Cloud load error:', err);
   }
 }
 
@@ -167,7 +174,7 @@ const accN=id=>(S.acc.find(a=>a.id===id)||{name:'?'}).name,ce=(ty,n)=>((S.cats[t
 const mdate=()=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+off);return d};
 const spentCat=(c,k)=>S.tx.filter(t=>t.type==='exp'&&t.cat===c&&t.date.startsWith(k)).reduce((s,t)=>s+t.amt,0);
 const bcls=p=>p>=100?'o':p>=80?'w':'';
-function toast(m,u){const t=$('#tt');t.innerHTML=esc(m)+(u?'<button data-undo="1">Undo</button>':'');undo=u||null;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',u?4500:2600)}
+function toast(m,u){const t=$('#tt');if(!t)return;t.innerHTML=esc(m)+(u?'<button data-undo="1">Undo</button>':'');undo=u||null;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',u?4500:2600)}
 const lbl=x=>{const y=new Date();y.setDate(y.getDate()-1);return x===iso(new Date())?'Today':x===iso(y)?'Yesterday':new Date(x+'T00:00').toLocaleString('en-US',{weekday:'short',day:'numeric',month:'short'})};
 const row=(t,sd)=>{const trf=t.type==='trf';return`<button class="r" data-e="${t.id}"><div class="ic">${trf?'🔁':ce(t.type,t.cat)}</div><div><b>${trf?'Transfer':esc(t.cat)}</b><small>${sd?lbl(t.date)+' · ':''}${esc(t.note)||esc(accN(t.acc))}${trf?' → '+esc(accN(t.to)):''}</small></div><span class="num ${t.type==='inc'?'i':t.type==='exp'?'e':''}">${t.type==='inc'?'+':t.type==='exp'?'−':''}${R0(t.amt)}</span></button>`};
 const sortT=L=>L.slice().sort((a,b)=>(b.date+(b.time||'')).localeCompare(a.date+(a.time||'')));
@@ -176,7 +183,9 @@ function stats(k,off){const now=new Date(),dim=new Date(+k.slice(0,4),+k.slice(5
 
 function render(){
   const d=mdate(),k=ym(d),L=S.tx.filter(t=>t.date.startsWith(k)),inc=sum(L,'inc'),exp=sum(L,'exp'),B=S.bud.total,I=stats(k,off);let h='';
-  $('#nav').innerHTML=[['h','🏠','Home'],['s','📊','Stats'],['+','','' ],['q','🔎','Search'],['a','👛','Accounts']].map(([i,e,n])=>i==='+'?'<button class="plus" data-add="1" aria-label="Add record"><b>+</b></button>':`<button data-t="${i}" class="${tab===i?'on':''}"><span>${e}</span>${n}</button>`).join('');
+  const navEl=$('#nav');
+  if(navEl) navEl.innerHTML=[['h','🏠','Home'],['s','📊','Stats'],['+','','' ],['q','🔎','Search'],['a','👛','Accounts']].map(([i,e,n])=>i==='+'?'<button class="plus" data-add="1" aria-label="Add record"><b>+</b></button>':`<button data-t="${i}" class="${tab===i?'on':''}"><span>${e}</span>${n}</button>`).join('');
+  
   if(tab==='h'){
     const tot=vis().reduce((s,a)=>s+bal(a),0),hr=new Date().getHours();
     h=`<div class="top"><div><small>${hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'} 👋</small><h1>Wallet Manager</h1></div><div style="display:flex;align-items:center"><button class="ib ${currentUser?'logged-in':''}" data-x="auth" aria-label="Account">${currentUser?'👤':'☁️'}<span class="sync-dot"></span></button><button class="ib" data-x="tools" aria-label="Tools">⚙️</button></div></div>
@@ -207,7 +216,8 @@ function render(){
       if(mode==='del')return`<div class="ar"><button class="x rm" data-dl="${a.id}" aria-label="Delete">−</button><span>${esc(a.name)}</span><b class="num">${R0(b)}</b></div>`;
       if(mode==='ord')return`<div class="ar"><span>${esc(a.name)}</span><button class="x" data-mv="${a.id}:-1" aria-label="Move up">▲</button><button class="x" data-mv="${a.id}:1" aria-label="Move down">▼</button></div>`;
       return`<button class="ar" data-ea="${a.id}"><span>${esc(a.name)}</span><b class="num ${b<0?'e':'i'}">${R0(b)}</b></button>`}).join('')+'</div>':''}).join('')||'<div class="empty">No accounts. Use ⋮ to add one.</div>'}
-  $('#v').innerHTML=h;
+  const vEl=$('#v');
+  if(vEl) vEl.innerHTML=h;
 }
 
 // ---------- add page ----------
@@ -243,6 +253,9 @@ function accSheet(id){const a=S.acc.find(x=>x.id===id)||{name:'',g:'Cash',open:'
 
 // --- AUTH SHEET ---
 function authSheet(){
+  if(!supabase){
+    return toast('Supabase library offline. Check connection.');
+  }
   if(currentUser){
     sheet(`
       <div class="sh2">Cloud Account</div>
@@ -258,21 +271,19 @@ function authSheet(){
       <div class="sh2">Login or Sign Up</div>
       <p style="color:var(--mu);font-size:13px;margin-bottom:14px">Sync your data to cloud so you never lose it across devices.</p>
       <label class="lab">Email</label>
-      <input class="f" type="email" name="em" placeholder="name@example.com" required autofocus>
+      <input class="f" type="email" name="em" id="in_em" placeholder="name@example.com" required autofocus>
       <label class="lab">Password</label>
-      <input class="f" type="password" name="pw" placeholder="••••••••" minlength="6" required>
+      <input class="f" type="password" name="pw" id="in_pw" placeholder="••••••••" minlength="6" required>
       <div style="display:flex;gap:8px;margin-top:12px">
-        <button type="submit" class="ok" data-auth="login" style="flex:1">Log In</button>
+        <button type="button" class="ok" data-auth="login" style="flex:1">Log In</button>
         <button type="button" class="ok" data-auth="signup" style="flex:1;background:var(--c2);color:var(--ink)">Sign Up</button>
       </div>
-    `, async fd=>{
-      // default submit is login
-      handleAuth('login', fd.get('em'), fd.get('pw'));
-    });
+    `);
   }
 }
 
 async function handleAuth(type, em, pw){
+  if(!supabase) return toast('Database not connected');
   if(!em || !pw) return toast('Enter email & password');
   try{
     if(type==='login'){
@@ -305,13 +316,14 @@ document.addEventListener('click',async e=>{
   if(e.target===$('#ov')){close();return}
   if(!e.target.closest('[data-menu],.menu'))$('#mm')&&($('#mm').innerHTML='');
   if(!c)return;const D=c.dataset;
-  if(D.auth==='signup'){
-    const form = $('#ov form');
-    const em = form.querySelector('[name=em]').value.trim();
-    const pw = form.querySelector('[name=pw]').value.trim();
-    handleAuth('signup', em, pw);
+
+  if(D.auth){
+    const em = ($('#in_em') ? $('#in_em').value : '').trim();
+    const pw = ($('#in_pw') ? $('#in_pw').value : '').trim();
+    handleAuth(D.auth, em, pw);
     return;
   }
+
   if(D.t==='q')searchSheet('');else if(D.t){tab=D.t;mode='';render();scrollTo(0,0)}else if(D.v){view=D.v;render()}else if(D.o){off=Math.min(0,off+ +D.o);render()}else if(D.st){st=D.st;render()}
   else if(D.sd){sel=D.sd;render()}
   else if(D.add!==undefined)openAdd();else if(D.e)openAdd(S.tx.find(t=>t.id===D.e));
@@ -349,27 +361,36 @@ document.addEventListener('input',e=>{const i=e.target.id;if(i==='q')results(e.t
 document.addEventListener('focusin',e=>{if(e.target.matches('#pg input[type=text],#pg input:not([type]),#pg textarea'))$('#pg').classList.add('typing')});
 document.addEventListener('focusout',()=>$('#pg').classList.remove('typing'));
 document.onkeydown=e=>{if(e.key==='Escape'){close();$('#pg').classList.remove('on')}};
-// lock
+
+// Passcode lock
 let en='';const lk=$('#lk');const lockUI=()=>{$('#dots').innerHTML=[0,1,2,3].map(i=>`<i class="${i<en.length?'f1':''}"></i>`).join('')};
 $('#pad').innerHTML=[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k=>k===''?'<span></span>':`<button data-lk="${k}" aria-label="${k}">${k}</button>`).join('');
 $('#pad').onclick=e=>{const b=e.target.closest('[data-lk]');if(!b)return;const k=b.dataset.lk;if(k==='⌫')en=en.slice(0,-1);else if(en.length<4)en+=k;lockUI();if(en.length===4){if(hp(en)===S.pin){lk.classList.remove('on');en=''}else{$('#lm').textContent='Wrong passcode, try again';en=''}setTimeout(lockUI,150)}};
 const lock=()=>{if(S.pin){en='';$('#lm').textContent='Enter passcode';lockUI();lk.classList.add('on')}};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)lock()});
-lock();render();
 
-// Check existing login session on load
+// Immediate execution
+lock();
+render();
+
+// Check user session safely in background
 if(supabase){
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if(session && session.user){
-      currentUser = session.user;
-      loadFromCloud();
+  try {
+    supabase.auth.getSession().then(({ data }) => {
+      if(data && data.session && data.session.user){
+        currentUser = data.session.user;
+        loadFromCloud();
+        render();
+      }
+    }).catch(e=>console.error(e));
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      currentUser = session ? session.user : null;
       render();
-    }
-  });
-  supabase.auth.onAuthStateChange((_event, session) => {
-    currentUser = session ? session.user : null;
-    render();
-  });
+    });
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
