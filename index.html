@@ -100,11 +100,9 @@ const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const m2=n=>Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}),R=n=>'₹'+m2(n),R0=n=>'₹'+Math.round(n).toLocaleString('en-IN');
 const pad=n=>String(n).padStart(2,'0'),ym=d=>d.getFullYear()+'-'+pad(d.getMonth()+1),iso=d=>ym(d)+'-'+pad(d.getDate()),hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
 let S,tab='h',view='l',off=0,st='exp',mode='',sel='',A=null,undo=null,fresh=0;
-function seed(){const t=new Date(),d=k=>{const x=new Date(t);x.setDate(t.getDate()-k);return iso(x)},x=(k,ty,cat,amt,note,acc)=>({id:uid(),type:ty,cat,amt,note,desc:'',acc,date:d(k),time:'12:00'});
-return{acc:[{id:'a1',name:'Cash in Hand',g:'Cash',open:800},{id:'a2',name:'UPI Wallet',g:'Accounts',open:3500},{id:'a3',name:'Savings',g:'Savings',open:2000}],cats:JSON.parse(JSON.stringify(DC)),bud:{total:6000,cat:{Food:2000,Fun:800}},pin:'',
-tx:[x(0,'exp','Food',110,'Canteen lunch','a2'),x(1,'exp','Transport',40,'Bus','a1'),x(1,'exp','Fun',250,'Movie with friends','a2'),x(2,'inc','Pocket Money',3000,'From home','a2'),x(3,'exp','Recharge',299,'Mobile plan','a2'),x(4,'exp','Study',450,'Notes and pens','a2'),x(5,'exp','Food',160,'Dinner','a1'),x(6,'inc','Freelance',800,'Logo work','a2')]}}
-try{S=JSON.parse(localStorage.getItem('gz1'))}catch(e){}S=S||seed();
-const save=()=>{try{localStorage.setItem('gz1',JSON.stringify(S))}catch(e){}};
+function seed(){return{acc:[{id:'a1',name:'Cash in Hand',g:'Cash',open:0},{id:'a2',name:'UPI / Bank',g:'Accounts',open:0}],cats:JSON.parse(JSON.stringify(DC)),bud:{total:0,cat:{}},pin:'',tx:[]}}
+try{S=JSON.parse(localStorage.getItem('gz2'))}catch(e){}S=S||seed();
+const save=()=>{try{localStorage.setItem('gz2',JSON.stringify(S))}catch(e){}};
 const vis=()=>S.acc.filter(a=>!a.hid),sum=(L,ty)=>L.filter(t=>t.type===ty).reduce((s,t)=>s+t.amt,0);
 const bal=a=>S.tx.reduce((s,t)=>s+(t.type==='inc'&&t.acc===a.id?t.amt:t.type==='exp'&&t.acc===a.id?-t.amt:t.type==='trf'?(t.to===a.id?t.amt:0)-(t.acc===a.id?t.amt:0):0),a.open);
 const accN=id=>(S.acc.find(a=>a.id===id)||{name:'?'}).name,ce=(ty,n)=>((S.cats[ty]||[]).find(c=>c[0]===n)||[0,'✨'])[1];
