@@ -8,150 +8,187 @@
 <meta name="theme-color" content="#0e0f14">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="/icon-192.png">
+
+<!-- Official Futuristic Wallet Manager Favicon (Pure App Logo) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='bgG' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23121524'/%3E%3Cstop offset='100%25' stop-color='%23080a12'/%3E%3C/linearGradient%3E%3ClinearGradient id='cardG' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%23ff3b56'/%3E%3Cstop offset='100%25' stop-color='%232979ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23bgG)'/%3E%3Crect x='22' y='20' width='56' height='26' rx='6' fill='url(%23cardG)' opacity='0.85'/%3E%3Crect x='16' y='32' width='68' height='48' rx='14' fill='%231b2034' stroke='%232979ff' stroke-width='3.5'/%3E%3Cpath d='M62 48 H84 A6 6 0 0 1 90 54 V62 A6 6 0 0 1 84 68 H62 Z' fill='%23252c48' stroke='%232979ff' stroke-width='2.5'/%3E%3Ccircle cx='76' cy='58' r='4' fill='%23ff3b56'/%3E%3C/svg%3E">
+
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Supabase Async CDN -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 :root{
-  --bg:#0e0f14;--c1:#161822;--c2:#212435;--c3:#2c3048;--ink:#f5f6fb;--mu:#8b92a8;--ln:#26293c;
+  --bg:#0e0f14;--c1:#151822;--c2:#1e2333;--c3:#2a3148;--ink:#f5f6fb;--mu:#8a91a8;--ln:#24283b;
   --inc:#2979ff; /* Blue for Income */
   --exp:#ff3b56; /* Red for Expense */
-  --trf:#8c7ae6; /* Violet/Purple for Transfer */
+  --trf:#8c7ae6; /* Purple for Transfer */
   --acc:#2979ff;--on:#ffffff;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:light){
-  :root:not([data-theme="dark"]){--bg:#f1f3f9;--c1:#ffffff;--c2:#e5e8f4;--c3:#d5daf0;--ink:#10121d;--mu:#68708c;--ln:#dce0ee;--inc:#1976d2;--exp:#e53935;--trf:#7b1fa2;--acc:#1976d2;--on:#ffffff}
+  :root:not([data-theme="dark"]){--bg:#f2f4fa;--c1:#ffffff;--c2:#e8ecf6;--c3:#dbe1f2;--ink:#111420;--mu:#6a728a;--ln:#dce1ef;--inc:#1976d2;--exp:#e53935;--trf:#7b1fa2;--acc:#1976d2;--on:#ffffff}
 }
-:root[data-theme="light"]{--bg:#f1f3f9;--c1:#ffffff;--c2:#e5e8f4;--c3:#d5daf0;--ink:#10121d;--mu:#68708c;--ln:#dce0ee;--inc:#1976d2;--exp:#e53935;--trf:#7b1fa2;--acc:#1976d2;--on:#ffffff}
+:root[data-theme="light"]{--bg:#f2f4fa;--c1:#ffffff;--c2:#e8ecf6;--c3:#dbe1f2;--ink:#111420;--mu:#6a728a;--ln:#dce1ef;--inc:#1976d2;--exp:#e53935;--trf:#7b1fa2;--acc:#1976d2;--on:#ffffff}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--ink);font:500 15px/1.4 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh}
+body{background:var(--bg);color:var(--ink);font:500 14px/1.4 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
 h1,h2,.big,.num{font-family:Sora,'Plus Jakarta Sans',sans-serif}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;text-align:inherit}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-main{max-width:480px;margin:0 auto;padding:14px 14px 130px}
+main{max-width:480px;margin:0 auto;padding:12px 14px 110px}
+
+/* Splash Screen */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s ease,visibility .4s}
+#splash.hide{opacity:0;visibility:hidden;pointer-events:none}
+.splash-logo{width:86px;height:86px;border-radius:24px;background:linear-gradient(145deg,#1b2438,#111522);display:grid;place-items:center;border:2px solid rgba(41,121,255,0.4);box-shadow:0 12px 35px rgba(41,121,255,0.25);margin-bottom:18px;animation:pulse 1.8s infinite ease-in-out}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.splash-bar{width:140px;height:4px;border-radius:99px;background:var(--c2);overflow:hidden;margin-top:16px}
+.splash-bar i{display:block;height:100%;background:var(--inc);width:40%;border-radius:99px;animation:load 1.2s infinite ease-in-out}
+@keyframes load{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
 
 /* Top Bar */
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.top small{color:var(--mu);font-size:12.5px}.top h1{font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.top small{color:var(--mu);font-size:12px;font-weight:600}.top h1{font-size:21px;font-weight:800;letter-spacing:-0.5px}
 .top-actions{display:flex;align-items:center;gap:8px}
-.btn-auth{background:var(--c1);border:1px solid var(--ln);color:var(--ink);border-radius:14px;padding:8px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.btn-auth{background:var(--c1);border:1px solid var(--ln);color:var(--ink);border-radius:12px;padding:6px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
 .btn-auth.logged-in{border-color:var(--inc);color:var(--inc)}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--inc);display:inline-block}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--inc)}
 
-/* Hero Balance Card */
-.hero{background:linear-gradient(135deg, #1b284f 0%, #161a29 100%);color:#fff;border-radius:26px;padding:22px 20px 18px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);box-shadow:0 12px 30px rgba(0,0,0,0.3)}
-.hero::after{content:"";position:absolute;right:-25px;top:-25px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(41,121,255,0.3) 0%,rgba(0,0,0,0) 70%)}
-.hero small{font-weight:600;opacity:.8;font-size:13px;letter-spacing:0.3px}.big{font-size:36px;font-weight:800;letter-spacing:-1.2px;line-height:1.15;margin:3px 0 14px}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chips span{background:rgba(12,14,22,0.7);color:#fff;padding:8px 14px;border-radius:99px;font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:6px}
+/* Balance Card */
+.hero{background:linear-gradient(135deg,#19233f 0%,#131724 100%);color:#fff;border-radius:24px;padding:18px 18px 16px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);box-shadow:0 10px 25px rgba(0,0,0,0.3)}
+.hero small{font-weight:600;opacity:.8;font-size:12.5px}.big{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1.15;margin:2px 0 12px}
+.chips{display:flex;gap:8px}
+.chips span{background:rgba(12,14,22,0.7);color:#fff;padding:6px 12px;border-radius:99px;font-size:12.5px;font-weight:700;border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:6px}
 .chips .ci i{color:var(--inc);font-style:normal}.chips .ce i{color:var(--exp);font-style:normal}
 
-/* Controls */
-.bar2{display:flex;justify-content:space-between;align-items:center;margin:16px 0 12px}
-.mn{display:flex;align-items:center;background:var(--c1);border-radius:99px;padding:3px;border:1px solid var(--ln)}.mn button{width:32px;height:32px;font-size:18px;text-align:center;border-radius:50%}.mn b{min-width:84px;text-align:center;font-size:13px}
-.sg{display:flex;background:var(--c1);border-radius:99px;padding:3px;border:1px solid var(--ln)}.sg button{padding:7px 13px;border-radius:99px;font-size:12.5px;font-weight:700;color:var(--mu)}.sg .on{background:var(--c2);color:var(--ink)}
+/* Controls & Month Bar */
+.bar2{display:flex;justify-content:space-between;align-items:center;margin:14px 0 10px}
+.mn{display:flex;align-items:center;background:var(--c1);border-radius:99px;padding:2px;border:1px solid var(--ln)}
+.mn button{width:28px;height:28px;font-size:17px;text-align:center;border-radius:50%}.mn b{min-width:78px;text-align:center;font-size:12.5px}
+.sg{display:flex;background:var(--c1);border-radius:99px;padding:2px;border:1px solid var(--ln)}
+.sg button{padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;color:var(--mu)}.sg .on{background:var(--c2);color:var(--ink)}
 
-/* Filter Pills */
-.filter-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
-.filter-scroll::-webkit-scrollbar{display:none}
-.fpill{padding:6px 12px;border-radius:99px;background:var(--c1);border:1px solid var(--ln);font-size:12px;font-weight:600;color:var(--mu);white-space:nowrap}
-.fpill.on{background:var(--c2);color:var(--ink);border-color:var(--mu)}
-
-/* Day list */
-.day{background:var(--c1);border-radius:22px;padding:6px 16px;margin-bottom:10px;border:1px solid var(--ln)}
-.dh{display:flex;justify-content:space-between;padding:10px 0 6px;color:var(--mu);font-size:12.5px;font-weight:700}
-.r{display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center;width:100%;padding:11px 0}.r+.r{border-top:1px solid var(--ln)}
-.ic{width:42px;height:42px;border-radius:15px;background:var(--c2);display:grid;place-items:center;font-size:20px}
-.r small{display:block;color:var(--mu);font-size:12px;margin-top:1px}.r b{font-weight:700;font-size:14.5px}.num{font-weight:700;font-size:15px}
+/* Transaction Day Rows */
+.day{background:var(--c1);border-radius:18px;padding:4px 14px;margin-bottom:10px;border:1px solid var(--ln)}
+.dh{display:flex;justify-content:space-between;padding:9px 0 5px;color:var(--mu);font-size:12px;font-weight:700}
+.r{display:grid;grid-template-columns:38px 1fr auto;gap:12px;align-items:center;width:100%;padding:10px 0}.r+.r{border-top:1px solid var(--ln)}
+.ic{width:38px;height:38px;border-radius:14px;background:var(--c2);display:grid;place-items:center;font-size:19px}
+.r small{display:block;color:var(--mu);font-size:11.5px;margin-top:1px}.r b{font-weight:700;font-size:14px}.num{font-weight:700;font-size:14.5px}
 .i{color:var(--inc)}.e{color:var(--exp)}.t{color:var(--trf)}
+.empty{text-align:center;color:var(--mu);padding:40px 10px;font-size:13px}
 
-/* Stats & Cards */
-.card{background:var(--c1);border-radius:24px;padding:18px 16px;margin-bottom:12px;border:1px solid var(--ln)}
-.card h2{font-size:15px;margin-bottom:12px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.grid3>div{background:var(--c1);border-radius:18px;padding:12px;border:1px solid var(--ln)}.grid3 small{color:var(--mu);font-size:11px;display:block}.grid3 b{font-family:Sora;font-size:13.5px}
-.ring{display:block;margin:6px auto 12px;width:210px;height:210px}
-.lg{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;padding:9px 0;width:100%}.lg i{width:12px;height:12px;border-radius:4px}
-.lg .bt{grid-column:2/4;height:6px;border-radius:4px;background:var(--c2);overflow:hidden;margin-top:-3px}.lg .bt u{display:block;height:100%;border-radius:4px}
-.wk{display:flex;align-items:flex-end;gap:8px;height:110px}.wk div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;font-size:11px;color:var(--mu)}.wk i{width:100%;border-radius:8px;background:var(--exp);min-height:4px}
+/* Accounts Tab Single-Line List */
+.acc-card{background:var(--c1);border:1px solid var(--ln);border-radius:18px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.acc-card .acc-left{display:flex;align-items:center;gap:10px}
+.acc-card .acc-icon{width:36px;height:36px;border-radius:12px;background:var(--c2);display:grid;place-items:center;font-size:18px}
+.acc-card b{font-size:14px;font-weight:700}
+.acc-card small{color:var(--mu);font-size:11px}
 
-/* Settings Grid (From User Screenshot) */
-.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px}
-.more-item{background:var(--c1);border:1px solid var(--ln);border-radius:20px;padding:18px 10px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;transition:transform .15s}
+/* Stats Tab */
+.card{background:var(--c1);border-radius:20px;padding:16px;margin-bottom:10px;border:1px solid var(--ln)}
+.card h2{font-size:14.5px;margin-bottom:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.grid3>div{background:var(--c1);border-radius:16px;padding:10px;border:1px solid var(--ln)}.grid3 small{color:var(--mu);font-size:10.5px;display:block}.grid3 b{font-family:Sora;font-size:13px}
+.ring{display:block;margin:4px auto 10px;width:190px;height:190px}
+.lg{display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;padding:8px 0;width:100%}.lg i{width:10px;height:10px;border-radius:3px}
+.lg .bt{grid-column:2/4;height:5px;border-radius:4px;background:var(--c2);overflow:hidden;margin-top:-2px}.lg .bt u{display:block;height:100%;border-radius:4px}
+.wk{display:flex;align-items:flex-end;gap:6px;height:95px}.wk div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;font-size:10.5px;color:var(--mu)}.wk i{width:100%;border-radius:6px;background:var(--exp);min-height:4px}
+
+/* More / Settings Grid */
+.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.more-item{background:var(--c1);border:1px solid var(--ln);border-radius:18px;padding:16px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
 .more-item:active{transform:scale(0.97)}
-.more-item .m-icon{width:46px;height:46px;border-radius:15px;background:var(--c2);display:grid;place-items:center;font-size:22px}
-.more-item span{font-size:12.5px;font-weight:700;color:var(--ink)}
+.more-item .m-icon{width:42px;height:42px;border-radius:14px;background:var(--c2);display:grid;place-items:center;font-size:20px}
+.more-item span{font-size:12px;font-weight:700;color:var(--ink)}
 
-/* Custom Built-In Numpad for Add Record */
-.numpad-wrap{background:var(--c1);border-radius:24px 24px 0 0;padding:12px 10px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(0,0,0,0.35);border-top:1px solid var(--ln)}
-.quick-chips{display:flex;gap:8px;margin-bottom:10px;overflow-x:auto}
-.quick-chip{flex:1;background:var(--c2);color:var(--ink);padding:8px 0;border-radius:12px;font-size:13px;font-weight:700;text-align:center}
-.numpad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.numpad-grid button{padding:14px 0;background:var(--c2);border-radius:16px;font:700 20px Sora;text-align:center}
+/* Add/Edit Fullscreen Page */
+.pg{position:fixed;inset:0;background:var(--bg);z-index:25;display:none;flex-direction:column;overflow:hidden}.pg.on{display:flex}
+.pg .in{max-width:480px;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column;padding:10px 14px;overflow-y:auto}
+.ph{display:flex;align-items:center;gap:10px;padding:4px 0 10px}.ph h2{flex:1;font-size:18px}.ph button{width:38px;height:38px;border-radius:12px;background:var(--c1);font-size:16px;text-align:center;border:1px solid var(--ln)}
+
+/* Type Bar (Income 1st, Expense 2nd, Transfer 3rd) */
+.tp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.tp button{padding:10px;border-radius:14px;background:var(--c1);font-weight:700;text-align:center;border:2px solid transparent;font-size:13px}
+
+/* Field Rows */
+.fl{display:grid;grid-template-columns:85px 1fr;align-items:center;padding:11px 4px;border-bottom:1px solid var(--ln);width:100%}
+.fl label{color:var(--mu);font-size:13px}.fl input{background:none;border:0;color:var(--ink);font:inherit;width:100%;padding:0}
+.fl input:focus{outline:0}.fl input[type=date],.fl input[type=time]{width:auto;color-scheme:dark}
+.amw{display:flex;align-items:center;gap:4px;font:700 20px Sora}
+.amtv{font:700 20px Sora;letter-spacing:-0.5px}
+
+/* Built-in Calculator Numpad */
+.numpad-wrap{background:var(--c1);border-radius:22px 22px 0 0;padding:10px 10px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 25px rgba(0,0,0,0.3);border-top:1px solid var(--ln);margin-top:auto}
+.calc-calc-display{background:var(--c2);border-radius:12px;padding:6px 12px;margin-bottom:8px;text-align:right;font:700 13px Sora;color:var(--mu);min-height:26px}
+.numpad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.numpad-grid button{padding:12px 0;background:var(--c2);border-radius:14px;font:700 18px Sora;text-align:center}
 .numpad-grid button:active{background:var(--c3)}
-.numpad-grid .btn-done{grid-row:span 2;background:var(--acc);color:#fff;font-size:16px;display:grid;place-items:center}
+.numpad-grid .btn-op{background:var(--c3);color:var(--inc);font-size:16px}
+.numpad-grid .btn-done{grid-row:span 2;background:var(--inc);color:#fff;font-size:15px;display:grid;place-items:center}
 
 /* Floating Bottom Navigation */
-.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));width:calc(100% - 24px);max-width:456px;background:var(--c1);border:1px solid var(--ln);border-radius:32px;display:grid;grid-template-columns:1fr 1fr 70px 1fr 1fr;align-items:center;padding:5px 6px;z-index:10;box-shadow:0 12px 35px rgba(0,0,0,.45)}
-.nav button{display:flex;flex-direction:column;align-items:center;font-size:10.5px;font-weight:700;color:var(--mu);padding:6px 0;border-radius:20px;gap:2px}
-.nav span{font-size:20px}.nav .on{color:var(--ink);background:var(--c2)}
-.nav .plus{width:56px;height:56px;border-radius:20px;background:linear-gradient(135deg,var(--inc),#0052cc);color:#fff;font-size:32px;font-weight:600;margin:-24px auto 0;justify-content:center;box-shadow:0 8px 22px rgba(41,121,255,.45);transform:rotate(45deg)}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));width:calc(100% - 24px);max-width:456px;background:var(--c1);border:1px solid var(--ln);border-radius:30px;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;padding:5px 6px;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.nav.has-plus{grid-template-columns:1fr 1fr 68px 1fr 1fr}
+.nav button{display:flex;flex-direction:column;align-items:center;font-size:10px;font-weight:700;color:var(--mu);padding:5px 0;border-radius:18px;gap:2px}
+.nav span{font-size:18px}.nav .on{color:var(--ink);background:var(--c2)}
+.nav .plus{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,var(--inc),#0052cc);color:#fff;font-size:28px;font-weight:600;margin:-22px auto 0;justify-content:center;box-shadow:0 8px 20px rgba(41,121,255,.45);transform:rotate(45deg)}
 .nav .plus b{transform:rotate(-45deg);font-weight:600;display:block}
 
 /* Overlays & Sheets */
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center;z-index:25}.ov.on{display:flex}
-.ov form,.ov .sheet-box{width:100%;max-width:480px;max-height:90vh;overflow:auto;background:var(--c1);padding:20px 18px calc(24px + env(safe-area-inset-bottom,0px));border-radius:28px 28px 0 0;animation:up .22s ease-out;border-top:1px solid var(--ln)}
-@keyframes up{from{transform:translateY(50px);opacity:0}}
-.sh2{font:800 19px Sora;margin-bottom:12px;letter-spacing:-0.5px}
-.f{width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--ln);background:var(--bg);color:var(--ink);font:inherit;margin-bottom:9px}
-.ok{width:100%;padding:14px;border-radius:16px;font-weight:800;font-size:15.5px;background:var(--acc);color:#fff;text-align:center}
-.lab{font-size:12.5px;color:var(--mu);margin:8px 0 5px;display:block}
-.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.cg button{background:var(--c2);border-radius:16px;padding:12px 4px;text-align:center;font-size:12.5px;font-weight:600}.cg span{display:block;font-size:24px}
-.lr{display:flex;justify-content:space-between;padding:15px 4px;width:100%;border-top:1px solid var(--ln)}
-.pg{position:fixed;inset:0;background:var(--bg);z-index:20;display:none;flex-direction:column;overflow:auto}.pg.on{display:flex}
-.pg .in{max-width:480px;width:100%;margin:0 auto;flex:1;padding:12px 16px}
-.ph{display:flex;align-items:center;gap:12px;padding:6px 0 14px}.ph h2{flex:1;font-size:19px}.ph button{width:42px;height:42px;border-radius:14px;background:var(--c1);font-size:18px;text-align:center;border:1px solid var(--ln)}
-.tp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.tp button{padding:12px;border-radius:16px;background:var(--c1);font-weight:700;text-align:center;border:2px solid transparent}
-.fl{display:grid;grid-template-columns:92px 1fr;align-items:center;padding:13px 4px;border-bottom:1px solid var(--ln);width:100%}
-.fl label{color:var(--mu);font-size:13.5px}.fl input{background:none;border:0;color:var(--ink);font:inherit;width:100%;padding:0}.fl input:focus{outline:0}
-.fl input[type=date],.fl input[type=time]{width:auto;color-scheme:dark}
-.amw{display:flex;align-items:center;gap:4px}.amw span,.amtv{font:800 32px Sora;letter-spacing:-1px}
-.tag-input{background:none;border:0;color:var(--ink);font:inherit;width:100%}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center;z-index:35}.ov.on{display:flex}
+.sheet-box{width:100%;max-width:480px;max-height:85vh;overflow:auto;background:var(--c1);padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px));border-radius:26px 26px 0 0;animation:up .2s ease-out;border-top:1px solid var(--ln)}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sh2{font:800 18px Sora;margin-bottom:12px;letter-spacing:-0.5px}
+.f{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--ln);background:var(--bg);color:var(--ink);font:inherit;margin-bottom:9px}
+.ok{width:100%;padding:13px;border-radius:14px;font-weight:800;font-size:15px;background:var(--acc);color:#fff;text-align:center}
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.cg button{background:var(--c2);border-radius:14px;padding:10px 4px;text-align:center;font-size:12px;font-weight:600}.cg span{display:block;font-size:22px}
+.lr{display:flex;justify-content:space-between;padding:13px 4px;width:100%;border-top:1px solid var(--ln)}
 
-/* Toast & Lock */
-#tt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(105px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:14px;font-weight:700;font-size:13.5px;z-index:50;display:none;max-width:90%}
-#tt button{font-weight:800;margin-left:12px;color:var(--exp)}
-#lk{position:fixed;inset:0;background:var(--bg);z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px}#lk.on{display:flex}
-.dots{display:flex;gap:14px}.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--mu)}.dots .f1{background:var(--inc);border-color:var(--inc)}
-.pad{display:grid;grid-template-columns:repeat(3,74px);gap:14px}.pad button{height:74px;border-radius:50%;background:var(--c1);font:700 24px Sora;text-align:center;border:1px solid var(--ln)}
+/* Toast & Lock Screen */
+#tt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:12px;font-weight:700;font-size:13px;z-index:50;display:none;max-width:90%}
+#tt button{font-weight:800;margin-left:10px;color:var(--exp)}
+#lk{position:fixed;inset:0;background:var(--bg);z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px}#lk.on{display:flex}
+.dots{display:flex;gap:12px}.dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--mu)}.dots .f1{background:var(--inc);border-color:var(--inc)}
+.pad{display:grid;grid-template-columns:repeat(3,70px);gap:12px}.pad button{height:70px;border-radius:50%;background:var(--c1);font:700 22px Sora;text-align:center;border:1px solid var(--ln)}
 
-/* KM Branding Footer */
-.km-footer{text-align:center;margin:32px 0 10px;color:var(--mu);font-size:11.5px;font-weight:600;letter-spacing:0.5px}
-.km-footer b{color:var(--ink)}
-
-/* Printable Statement */
-@media print{
-  body{background:#fff;color:#000}
-  .nav,.top-actions,.bar2,.filter-scroll,.plus,.ph button{display:none!important}
-  main{padding:0;max-width:100%}
-  .hero{background:#f1f3f9!important;color:#000!important}
-  .day{border:1px solid #ccc;break-inside:avoid}
-}
+.app-brand-footer{text-align:center;margin:28px 0 8px;color:var(--mu);font-size:11.5px;font-weight:600}
+.app-brand-footer b{color:var(--ink)}
 </style>
 </head>
 <body>
+
+<!-- Animated Official App Logo Splash Screen -->
+<div id="splash">
+  <div class="splash-logo">
+    <svg viewBox="0 0 100 100" width="56" height="56">
+      <defs>
+        <linearGradient id="swCard" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ff3b56"/>
+          <stop offset="100%" stop-color="#2979ff"/>
+        </linearGradient>
+      </defs>
+      <!-- Sleek wallet with cards -->
+      <rect x="22" y="16" width="56" height="26" rx="6" fill="url(#swCard)" opacity="0.9"/>
+      <rect x="14" y="28" width="72" height="52" rx="14" fill="#1b2034" stroke="#2979ff" stroke-width="3.5"/>
+      <path d="M60 46 H85 A6 6 0 0 1 91 52 V62 A6 6 0 0 1 85 68 H60 Z" fill="#252c48" stroke="#2979ff" stroke-width="2.5"/>
+      <circle cx="77" cy="57" r="4.5" fill="#ff3b56"/>
+    </svg>
+  </div>
+  <h2 style="font:800 20px Sora;letter-spacing:-0.5px">Wallet Manager</h2>
+  <small style="color:var(--mu);font-weight:600;margin-top:2px">Personal Money Tracker</small>
+  <div class="splash-bar"><i></i></div>
+</div>
+
 <main id="v"></main>
 <nav class="nav" id="nav"></nav>
 <div class="pg" id="pg"></div>
 <div class="ov" id="ov"></div>
 <div id="tt"></div>
+
+<!-- Lock Screen -->
 <div id="lk">
-  <div style="font-size:38px;margin-bottom:-10px">👛</div>
-  <h1>Wallet Manager</h1>
-  <div id="lm" style="color:var(--mu)">Enter passcode</div>
+  <div style="font-size:36px">🔒</div>
+  <h1 style="font-size:22px">Wallet Manager</h1>
+  <div id="lm" style="color:var(--mu);font-size:13px">Enter passcode</div>
   <div class="dots" id="dots"></div>
   <div class="pad" id="pad"></div>
 </div>
@@ -171,17 +208,17 @@ function getSB(){
 
 let currentUser = null;
 const DC={
-  exp:[['Food','🍜'],['Transport','🚌'],['Shopping','🛍️'],['Study','📚'],['Hostel / Rent','🏠'],['Recharge','📱'],['Fun','🎮'],['Health','💊'],['Social Life','👫'],['Split Share','🤝'],['Other','✨']],
-  inc:[['Pocket Money','💸'],['Salary','💼'],['Freelance','💻'],['Scholarship','🎓'],['Gift','🎁'],['Other','💰']]
+  inc:[['Salary','💼'],['Pocket Money','💸'],['Freelance','💻'],['Scholarship','🎓'],['Gift','🎁'],['Other','💰']],
+  exp:[['Food','🍜'],['Transport','🚌'],['Shopping','🛍️'],['Study','📚'],['Hostel / Rent','🏠'],['Recharge','📱'],['Fun','🎮'],['Health','💊'],['Social Life','👫'],['Other','✨']]
 };
-const GR=['Cash','Accounts','Card','Debit Card','Savings','Top-Up/Prepaid','Investments','Overdrafts','Loan','Others'];
-const COL=['#2979ff','#ff3b56','#8c7ae6','#ffc247','#00d2d3','#ff9f43','#54a0ff','#5f27cd','#ee5253','#10ac84'];
+const GR=['Cash','Accounts','Card','Debit Card','Savings','Top-Up/Prepaid','Investments','Others'];
+const COL=['#2979ff','#ff3b56','#8c7ae6','#ffc247','#00d2d3','#ff9f43','#54a0ff','#10ac84'];
 const $=q=>document.querySelector(q),uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const m2=n=>Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}),R=n=>'₹'+m2(n),R0=n=>'₹'+Math.round(n||0).toLocaleString('en-IN');
 const pad=n=>String(n).padStart(2,'0'),ym=d=>d.getFullYear()+'-'+pad(d.getMonth()+1),iso=d=>ym(d)+'-'+pad(d.getDate()),hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
 
-let S,tab='h',view='l',off=0,st='exp',mode='',sel='',A=null,undo=null,fresh=0,activeTag='',activeCatFilter='';
+let S,tab='h',view='l',off=0,st='exp',statsPeriod='monthly',sel='',A=null,undo=null,fresh=0,calcExp='';
 
 function seed(){
   return {
@@ -189,6 +226,7 @@ function seed(){
     cats:JSON.parse(JSON.stringify(DC)),
     bud:{total:0,cat:{}},
     pin:'',
+    gdriveFreq:'daily',
     tx:[]
   };
 }
@@ -201,15 +239,12 @@ function cleanState(raw){
     cats: raw.cats && typeof raw.cats === 'object' ? raw.cats : def.cats,
     bud: raw.bud && typeof raw.bud === 'object' ? raw.bud : def.bud,
     pin: typeof raw.pin === 'string' ? raw.pin : '',
+    gdriveFreq: raw.gdriveFreq || 'daily',
     tx: Array.isArray(raw.tx) ? raw.tx : []
   };
 }
 
-try {
-  S = cleanState(JSON.parse(localStorage.getItem('gz2')));
-} catch(e) {
-  S = seed();
-}
+try { S = cleanState(JSON.parse(localStorage.getItem('gz2'))); } catch(e) { S = seed(); }
 
 // --- CLOUD SYNC ---
 let syncTimer = null;
@@ -263,9 +298,7 @@ const row=(t,sd)=>{
   const trf=t.type==='trf', isInc=t.type==='inc', isExp=t.type==='exp';
   const cls = isInc ? 'i' : (isExp ? 'e' : 't');
   const sign = isInc ? '+' : (isExp ? '−' : '⇄ ');
-  const tagBadge = t.tag ? `<span style="background:var(--c2);padding:2px 6px;border-radius:6px;font-size:10.5px;color:var(--inc);margin-left:4px">#${esc(t.tag)}</span>` : '';
-  const splitBadge = t.splitWith ? `<span style="background:var(--c2);padding:2px 6px;border-radius:6px;font-size:10.5px;color:var(--exp);margin-left:4px">👥 ${esc(t.splitWith)}</span>` : '';
-  return `<button class="r" data-e="${t.id}"><div class="ic">${trf?'🔁':ce(t.type,t.cat)}</div><div><b>${trf?'Transfer':esc(t.cat)}${tagBadge}${splitBadge}</b><small>${sd?lbl(t.date)+' · ':''}${esc(t.note)||esc(accN(t.acc))}${trf?' → '+esc(accN(t.to)):''}</small></div><span class="num ${cls}">${sign}${R0(t.amt)}</span></button>`;
+  return `<button class="r" data-e="${t.id}"><div class="ic">${trf?'🔁':ce(t.type,t.cat)}</div><div><b>${trf?'Transfer':esc(t.cat)}</b><small>${sd?lbl(t.date)+' · ':''}${esc(t.note)||esc(accN(t.acc))}${trf?' → '+esc(accN(t.to)):''}</small></div><span class="num ${cls}">${sign}${R0(t.amt)}</span></button>`;
 };
 
 const sortT=L=>(L||[]).slice().sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
@@ -276,25 +309,39 @@ function render(){
   try{
     const d=mdate(),k=ym(d);
     let L=(S.tx||[]).filter(t=>t.date&&t.date.startsWith(k));
-    if(activeTag) L = L.filter(t=>t.tag===activeTag);
-    if(activeCatFilter) L = L.filter(t=>t.cat===activeCatFilter);
-
     const inc=sum(L,'inc'),exp=sum(L,'exp'),I=stats(k,off);let h='';
     
-    // Bottom Navigation (Clean 4 tabs + center Add button)
+    // Bottom Nav: Plus button appears ONLY on Transactions tab
     const navEl=$('#nav');
-    if(navEl) navEl.innerHTML=[['h','📖','Trans.'],['s','📊','Stats'],['+','','' ],['a','👛','Accounts'],['m','⚙️','More']].map(([i,e,n])=>i==='+'?'<button class="plus" data-add="1" aria-label="Add record"><b>+</b></button>':`<button data-t="${i}" class="${tab===i?'on':''}"><span>${e}</span>${n}</button>`).join('');
+    if(navEl){
+      if(tab==='h'){
+        navEl.className = 'nav has-plus';
+        navEl.innerHTML = [
+          ['h','📖','Trans.'],
+          ['s','📊','Stats'],
+          ['+','',''],
+          ['a','👛','Accounts'],
+          ['m','⚙️','More']
+        ].map(([i,e,n])=> i==='+'?'<button class="plus" data-add="1" aria-label="Add record"><b>+</b></button>':`<button data-t="${i}" class="${tab===i?'on':''}"><span>${e}</span>${n}</button>`).join('');
+      } else {
+        navEl.className = 'nav';
+        navEl.innerHTML = [
+          ['h','📖','Trans.'],
+          ['s','📊','Stats'],
+          ['a','👛','Accounts'],
+          ['m','⚙️','More']
+        ].map(([i,e,n])=> `<button data-t="${i}" class="${tab===i?'on':''}"><span>${e}</span>${n}</button>`).join('');
+      }
+    }
     
+    // TAB 1: TRANSACTIONS
     if(tab==='h'){
       const tot=vis().reduce((s,a)=>s+bal(a),0),hr=new Date().getHours();
-      // Collect unique tags
-      const allTags = [...new Set((S.tx||[]).map(t=>t.tag).filter(Boolean))];
-      
       h=`<div class="top">
         <div><small>${hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'} 👋</small><h1>Wallet Manager</h1></div>
         <div class="top-actions">
           <button class="btn-auth ${currentUser?'logged-in':''}" data-x="auth">
-            <span>${currentUser?'👤 Sync On':'☁️ Login'}</span>
+            <span>${currentUser?'👤 Sync On':'☁️ Cloud'}</span>
             ${currentUser?'<span class="sync-dot"></span>':''}
           </button>
         </div>
@@ -315,65 +362,99 @@ function render(){
         </div>
       </div>`;
 
-      // Filter tags row if any tag exists
-      if(allTags.length){
-        h += `<div class="filter-scroll">
-          <button class="fpill ${!activeTag?'on':''}" data-settag="">All Tags</button>
-          ${allTags.map(tg=>`<button class="fpill ${activeTag===tg?'on':''}" data-settag="${esc(tg)}">#${esc(tg)}</button>`).join('')}
-        </div>`;
-      }
-
       if(view==='l'){
         const ds=[...new Set(L.map(t=>t.date))].sort().reverse();
         h+=ds.length?ds.map(x=>{
           const q=sortT(L.filter(t=>t.date===x)),n=sum(q,'inc')-sum(q,'exp');
           return`<div class="day"><div class="dh"><span>${lbl(x)}</span><span class="${n<0?'e':'i'}">${n<0?'−':'+'}${R0(Math.abs(n))}</span></div>${q.map(t=>row(t)).join('')}</div>`
-        }).join(''):'<div class="empty">No transactions logged this month.<br>Tap + to record one.</div>';
+        }).join(''):'<div class="empty">No records this month.<br>Tap + to record an entry.</div>';
       }else{
         const f=new Date(d.getFullYear(),d.getMonth(),1).getDay(),mx=Math.max(...[...Array(I.dim)].map((_,i)=>sum(L.filter(t=>t.date===k+'-'+pad(i+1)),'exp')),1);
-        h+='<div class="cal" style="background:var(--c1);border-radius:24px;padding:12px;margin-bottom:10px;border:1px solid var(--ln);display:grid;grid-template-columns:repeat(7,1fr);gap:5px">'+'SMTWTFS'.split('').map(x=>`<div class="w" style="text-align:center;color:var(--mu);font-weight:700;font-size:12px">${x}</div>`).join('')+'<div style="visibility:hidden"></div>'.repeat(f)+[...Array(I.dim)].map((_,i)=>{const x=k+'-'+pad(i+1),e=sum(L.filter(t=>t.date===x),'exp');return`<button data-sd="${x}" class="${sel===x?'sel':''}" style="${e?`background:rgba(255,59,86,${.15+e/mx*.55})`:''}">${i+1}<small style="display:block;font-size:9px">${e?Math.round(e):''}</small></button>`}).join('')+'</div>';
-        if(sel.startsWith(k)){const q=sortT(L.filter(t=>t.date===sel));h+=`<div class="day"><div class="dh"><span>${lbl(sel)}</span></div>${q.length?q.map(t=>row(t)).join(''):'<div class="empty" style="padding:16px">No records</div>'}</div>`}
+        h+='<div style="background:var(--c1);border-radius:20px;padding:12px;margin-bottom:10px;border:1px solid var(--ln);display:grid;grid-template-columns:repeat(7,1fr);gap:4px">'+'SMTWTFS'.split('').map(x=>`<div style="text-align:center;color:var(--mu);font-weight:700;font-size:11px">${x}</div>`).join('')+'<div style="visibility:hidden"></div>'.repeat(f)+[...Array(I.dim)].map((_,i)=>{const x=k+'-'+pad(i+1),e=sum(L.filter(t=>t.date===x),'exp');return`<button data-sd="${x}" class="${sel===x?'sel':''}" style="aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--c2);${e?`background:rgba(255,59,86,${.15+e/mx*.55})`:''}">${i+1}<small style="font-size:8.5px">${e?Math.round(e):''}</small></button>`}).join('')+'</div>';
+        if(sel.startsWith(k)){const q=sortT(L.filter(t=>t.date===sel));h+=`<div class="day"><div class="dh"><span>${lbl(sel)}</span></div>${q.length?q.map(t=>row(t)).join(''):'<div class="empty" style="padding:14px">No records</div>'}</div>`}
       }
     }
     
+    // TAB 2: STATISTICS (Pie Chart + Time Filters)
     if(tab==='s'){
-      const map={};L.filter(t=>t.type===st).forEach(t=>map[t.cat]=(map[t.cat]||0)+t.amt);
-      const es=Object.entries(map).sort((a,b)=>b[1]-a[1]),tot=es.reduce((s,e)=>s+e[1],0),C=2*Math.PI*78;let a=0,arcs='';
-      es.forEach(([c,v],i)=>{const l=v/(tot||1)*C;arcs+=`<circle r="78" cx="110" cy="110" fill="none" stroke="${COL[i%10]}" stroke-width="26" stroke-dasharray="${Math.max(l-3,1)} ${C}" stroke-dashoffset="${-a}" transform="rotate(-90 110 110)"/>`;a+=l});
-      const pk=new Date(d.getFullYear(),d.getMonth()-1,1),pe=sum((S.tx||[]).filter(t=>t.date&&t.date.startsWith(ym(pk))),'exp'),top=Object.entries(L.filter(t=>t.type==='exp').reduce((m,t)=>(m[t.cat]=(m[t.cat]||0)+t.amt,m),{})).sort((a,b)=>b[1]-a[1])[0];
+      let filteredL = S.tx || [];
+      const now = new Date();
+      if(statsPeriod === 'weekly'){
+        const weekAgo = new Date(); weekAgo.setDate(now.getDate() - 7);
+        filteredL = filteredL.filter(t => new Date(t.date) >= weekAgo);
+      } else if(statsPeriod === 'annually'){
+        const yr = String(d.getFullYear());
+        filteredL = filteredL.filter(t => t.date && t.date.startsWith(yr));
+      } else { // monthly
+        filteredL = filteredL.filter(t => t.date && t.date.startsWith(k));
+      }
+
+      const map={};filteredL.filter(t=>t.type===st).forEach(t=>map[t.cat]=(map[t.cat]||0)+t.amt);
+      const es=Object.entries(map).sort((a,b)=>b[1]-a[1]),tot=es.reduce((s,e)=>s+e[1],0),C=2*Math.PI*74;let a=0,arcs='';
+      es.forEach(([c,v],i)=>{const l=v/(tot||1)*C;arcs+=`<circle r="74" cx="100" cy="100" fill="none" stroke="${COL[i%8]}" stroke-width="24" stroke-dasharray="${Math.max(l-3,1)} ${C}" stroke-dashoffset="${-a}" transform="rotate(-90 100 100)"/>`;a+=l});
+      
+      const stInc = sum(filteredL,'inc'), stExp = sum(filteredL,'exp');
       const days=[...Array(7)].map((_,i)=>{const x=new Date();x.setDate(x.getDate()-6+i);return[x.toLocaleString('en-US',{weekday:'narrow'}),sum((S.tx||[]).filter(t=>t.date===iso(x)),'exp')]}),mx=Math.max(...days.map(x=>x[1]),1);
-      h=`<div class="top"><h1>Analytics</h1>${monthBar(d)}</div>
-      <div class="sg" style="margin-bottom:12px"><button style="flex:1" data-st="exp" class="${st==='exp'?'on':''}">Spent ${R0(exp)}</button><button style="flex:1" data-st="inc" class="${st==='inc'?'on':''}">Earned ${R0(inc)}</button></div>
-      <div class="grid3"><div><small>Avg / day</small><b>${R0(exp/I.el)}</b></div><div><small>vs last mo.</small><b class="${pe&&exp>pe?'e':'i'}">${pe?(exp>pe?'+':'')+Math.round((exp-pe)/pe*100)+'%':'–'}</b></div><div><small>Top spend</small><b>${top?ce('exp',top[0])+' '+esc(top[0]).slice(0,6):'–'}</b></div></div>
-      <div class="card">${es.length?`<svg class="ring" viewBox="0 0 220 220" role="img" aria-label="Category ring">${arcs}<text x="110" y="106" text-anchor="middle" fill="currentColor" opacity=".55" font-size="12">${st==='exp'?'Spent':'Earned'}</text><text x="110" y="130" text-anchor="middle" fill="currentColor" font-size="20" font-weight="800" font-family="Sora">${R0(tot)}</text></svg>`+es.map(([c,v],i)=>`<button class="lg"><i style="background:${COL[i%10]}"></i><span>${ce(st,c)} ${esc(c)} <small style="color:var(--mu)">${Math.round(v/(tot||1)*100)}%</small></span><b class="num">${R0(v)}</b><div class="bt"><u style="width:${v/(es[0][1]||1)*100}%;background:${COL[i%10]}"></u></div></button>`).join(''):'<div class="empty">No data for this month yet.</div>'}</div>
-      <div class="card"><h2>Last 7 days</h2><div class="wk">${days.map(([n,v])=>`<div title="${R0(v)}"><i style="height:${v/mx*80}%"></i>${n}</div>`).join('')}</div></div>`;
+
+      h=`<div class="top">
+        ${monthBar(d)}
+        <div class="sg">
+          <button data-per="weekly" class="${statsPeriod==='weekly'?'on':''}">Week</button>
+          <button data-per="monthly" class="${statsPeriod==='monthly'?'on':''}">Month</button>
+          <button data-per="annually" class="${statsPeriod==='annually'?'on':''}">Year</button>
+        </div>
+      </div>
+      <div class="sg" style="margin-bottom:12px">
+        <button style="flex:1" data-st="exp" class="${st==='exp'?'on':''}">Expense ${R0(stExp)}</button>
+        <button style="flex:1" data-st="inc" class="${st==='inc'?'on':''}">Income ${R0(stInc)}</button>
+      </div>
+      <div class="card">
+        ${es.length?`<svg class="ring" viewBox="0 0 200 200" role="img">${arcs}<text x="100" y="96" text-anchor="middle" fill="currentColor" opacity=".6" font-size="11">${st==='exp'?'Total Spent':'Total Income'}</text><text x="100" y="118" text-anchor="middle" fill="currentColor" font-size="18" font-weight="800" font-family="Sora">${R0(tot)}</text></svg>`+es.map(([c,v],i)=>`<button class="lg"><i style="background:${COL[i%8]}"></i><span>${ce(st,c)} ${esc(c)} <small style="color:var(--mu)">${Math.round(v/(tot||1)*100)}%</small></span><b class="num">${R0(v)}</b><div class="bt"><u style="width:${v/(es[0][1]||1)*100}%;background:${COL[i%8]}"></u></div></button>`).join(''):'<div class="empty">No transactions in this period.</div>'}
+      </div>
+      <div class="card"><h2>Last 7 Days Trend</h2><div class="wk">${days.map(([n,v])=>`<div title="${R0(v)}"><i style="height:${v/mx*80}%"></i>${n}</div>`).join('')}</div></div>`;
     }
     
+    // TAB 3: ACCOUNTS (Clean single-line card layout)
     if(tab==='a'){
       const av=vis(),bs=av.map(x=>[x,bal(x)]),as=bs.filter(b=>b[1]>0).reduce((s,b)=>s+b[1],0),li=-bs.filter(b=>b[1]<0).reduce((s,b)=>s+b[1],0);
-      h=`<div class="top" style="position:relative"><h1>Accounts</h1><div>${mode?'<button class="btn-auth" data-md="">Done</button>':'<button class="btn-auth" data-md="add">+ New</button>'}</div></div>
-      <div class="grid3"><div><small>Assets</small><b class="i">${R0(as)}</b></div><div><small>Liabilities</small><b class="e">${R0(li)}</b></div><div><small>Net Worth</small><b>${R0(as-li)}</b></div></div>`+
-      GR.map(g=>{const q=(S.acc||[]).filter(a=>a.g===g&&!a.hid);return q.length?`<div style="display:flex;justify-content:space-between;color:var(--mu);font-size:12.5px;font-weight:700;margin:14px 4px 6px"><span>${g}</span><span>${R0(q.reduce((s,a)=>s+bal(a),0))}</span></div><div class="day" style="padding:4px 14px">`+q.map(a=>{const b=bal(a);
-        return`<button class="r" data-ea="${a.id}"><div><b>${esc(a.name)}</b></div><span class="num ${b<0?'e':'i'}">${R0(b)}</span></button>`}).join('')+'</div>':''}).join('')||'<div class="empty">No accounts. Use + New to add one.</div>';
+      h=`<div class="top"><h1>Accounts</h1><button class="btn-auth" data-x="new_acc">+ Add Account</button></div>
+      <div class="grid3">
+        <div><small>Assets</small><b class="i">${R0(as)}</b></div>
+        <div><small>Liabilities</small><b class="e">${R0(li)}</b></div>
+        <div><small>Net Worth</small><b>${R0(as-li)}</b></div>
+      </div>`+
+      (S.acc||[]).filter(a=>!a.hid).map(a=>{
+        const b = bal(a);
+        return `<div class="acc-card" data-ea="${a.id}">
+          <div class="acc-left">
+            <div class="acc-icon">${a.g==='Cash'?'💵':a.g==='Card'?'💳':'🏦'}</div>
+            <div>
+              <b>${esc(a.name)}</b>
+              <small style="display:block">${esc(a.g)}</small>
+            </div>
+          </div>
+          <span class="num ${b<0?'e':'i'}">${R0(b)}</span>
+        </div>`;
+      }).join('') || '<div class="empty">No accounts added yet.</div>';
     }
 
+    // TAB 4: MORE & SETTINGS
     if(tab==='m'){
-      // Settings Grid (Matches user screenshot perfectly!)
-      h=`<div class="top"><h1>Settings & More</h1><small style="color:var(--mu)">v2.0 Premium</small></div>
+      h=`<div class="top"><h1>Settings & More</h1><small style="color:var(--mu)">v2.5 Pro</small></div>
       <div class="more-grid">
-        <button class="more-item" data-x="auth"><div class="m-icon">☁️</div><span>Cloud Sync</span></button>
-        <button class="more-item" data-x="pin"><div class="m-icon">🔒</div><span>Passcode</span></button>
-        <button class="more-item" data-x="calcbox"><div class="m-icon">🧮</div><span>CalcBox</span></button>
+        <button class="more-item" data-x="gdrive"><div class="m-icon">💾</div><span>Google Drive</span></button>
+        <button class="more-item" data-x="auth"><div class="m-icon">☁️</div><span>Cloud Account</span></button>
+        <button class="more-item" data-x="pin"><div class="m-icon">🔒</div><span>Passcode Lock</span></button>
+        <button class="more-item" data-x="theme"><div class="m-icon">🌓</div><span>Dark / Light</span></button>
         <button class="more-item" data-x="pdf"><div class="m-icon">📄</div><span>Statement</span></button>
-        <button class="more-item" data-x="theme"><div class="m-icon">🌓</div><span>Appearance</span></button>
-        <button class="more-item" data-x="bk"><div class="m-icon">🔄</div><span>Backup</span></button>
+        <button class="more-item" data-x="bk"><div class="m-icon">🔄</div><span>JSON Backup</span></button>
         <button class="more-item" data-x="feedback"><div class="m-icon">✉️</div><span>Feedback</span></button>
         <button class="more-item" data-x="fresh"><div class="m-icon">🧹</div><span>Reset Data</span></button>
-        <button class="more-item" data-x="about"><div class="m-icon">👑</div><span>About KM</span></button>
+        <button class="more-item" data-x="about"><div class="m-icon">👛</div><span>About App</span></button>
       </div>
-      <div class="km-footer">
-        Crafted with ❤️ by <b>KM (Kamlesh Mali)</b><br>
-        Wallet Manager · Fast & Secure Personal Finance
+      <div class="app-brand-footer">
+        <b>Wallet Manager</b> · Smart Personal Money Tracker<br>
+        Fast, Offline-First & Private
       </div>`;
     }
 
@@ -382,11 +463,13 @@ function render(){
   }catch(err){console.error('Render error:', err);}
 }
 
-// ---------- ADD / EDIT MODAL WITH BUILT-IN NUMPAD ----------
+// ---------- ADD MODAL (Income 1st, Expense 2nd, Transfer 3rd) ----------
 const acs=()=>vis().length?vis():(S.acc||seed().acc);
 function openAdd(t){
   const a=acs();
-  A=t?{...t,amt:String(t.amt),edit:1}:{type:'exp',cat:'',amt:'',date:iso(new Date()),time:hm(new Date()),acc:a[0].id,to:'',note:'',tag:'',splitWith:''};
+  calcExp = '';
+  // Income 1st, Expense 2nd, Transfer 3rd
+  A=t?{...t,amt:String(t.amt),edit:1}:{type:'inc',cat:'',amt:'',date:iso(new Date()),time:hm(new Date()),acc:a[0].id,to:'',note:''};
   if(!A.to)A.to=(a[1]||a[0]).id;
   $('#pg').classList.add('on');
   addR();
@@ -395,90 +478,155 @@ function openAdd(t){
 function addR(){
   const trf=A.type==='trf', isInc=A.type==='inc';
   const col=isInc?'var(--inc)':(trf?'var(--trf)':'var(--exp)');
-  $('#pg').innerHTML=`<div class="in" style="display:flex;flex-direction:column;min-height:100vh">
-    <div class="ph"><button data-a="close" aria-label="Back">←</button><h2>${{inc:'Add Income',exp:'Add Expense',trf:'Transfer'}[A.type]}</h2>${A.edit?'<button data-a="del" aria-label="Delete">🗑</button>':''}</div>
-    <div class="tp">${[['exp','Expense'],['inc','Income'],['trf','Transfer']].map(([i,n])=>`<button data-ty="${i}" style="${A.type===i?`border-color:${col};color:${col};background:var(--c2)`:''}">${n}</button>`).join('')}</div>
-    
-    <div style="flex:1">
-      <div class="fl"><label>Date & Time</label><div style="display:flex;gap:8px"><input type="date" id="ad" value="${A.date}" aria-label="Date"><input type="time" id="at" value="${A.time||''}" aria-label="Time"></div></div>
-      <div class="fl"><label>Amount</label><div class="amw" style="color:${col}"><span>₹</span><span class="amtv" id="disp_amt">${A.amt||'0'}</span></div></div>
-      ${trf?'':`<button class="fl" data-a="cat"><label>Category</label><span>${A.cat?ce(A.type,A.cat)+' '+esc(A.cat):'<span style="color:var(--mu)">Select category</span>'}</span></button>`}
-      <button class="fl" data-a="acc"><label>${trf?'From':'Account'}</label><span>${esc(accN(A.acc))}</span></button>
-      ${trf?`<button class="fl" data-a="to"><label>To</label><span>${esc(accN(A.to))}</span></button>`:''}
-      <div class="fl"><label>Note</label><input id="an" maxlength="40" placeholder="e.g. Chai, Groceries, Rent" value="${esc(A.note||'')}"></div>
-      <div class="fl"><label>Tag (#)</label><input class="tag-input" id="atag" maxlength="20" placeholder="e.g. trip, office, personal" value="${esc(A.tag||'')}"></div>
-      <div class="fl"><label>Split with</label><input id="asplit" maxlength="30" placeholder="e.g. Rahul, Roommates" value="${esc(A.splitWith||'')}"></div>
+  
+  $('#pg').innerHTML=`<div class="in">
+    <div class="ph">
+      <button data-a="close" aria-label="Back">←</button>
+      <h2>${{inc:'Add Income',exp:'Add Expense',trf:'Transfer'}[A.type]}</h2>
+      ${A.edit?'<button data-a="del" aria-label="Delete">🗑</button>':''}
     </div>
 
-    <!-- Built-in Custom Numpad Keyboard -->
+    <!-- 1st Income, 2nd Expense, 3rd Transfer -->
+    <div class="tp">
+      <button data-ty="inc" style="${A.type==='inc'?'border-color:var(--inc);color:var(--inc);background:var(--c2)':''}">Income</button>
+      <button data-ty="exp" style="${A.type==='exp'?'border-color:var(--exp);color:var(--exp);background:var(--c2)':''}">Expense</button>
+      <button data-ty="trf" style="${A.type==='trf'?'border-color:var(--trf);color:var(--trf);background:var(--c2)':''}">Transfer</button>
+    </div>
+    
+    <div style="flex:1">
+      <div class="fl"><label>Date & Time</label><div style="display:flex;gap:8px"><input type="date" id="ad" value="${A.date}"><input type="time" id="at" value="${A.time||''}"></div></div>
+      <div class="fl"><label>Amount</label><div class="amw" style="color:${col}"><span>₹</span><span class="amtv" id="disp_amt">${A.amt||'0'}</span></div></div>
+      ${trf?'':`<button class="fl" data-a="cat" id="btn_cat"><label>Category</label><span>${A.cat?ce(A.type,A.cat)+' '+esc(A.cat):'<span style="color:var(--mu)">Select category ›</span>'}</span></button>`}
+      <button class="fl" data-a="acc"><label>${trf?'From':'Account'}</label><span>${esc(accN(A.acc))}</span></button>
+      ${trf?`<button class="fl" data-a="to"><label>To</label><span>${esc(accN(A.to))}</span></button>`:''}
+      <div class="fl"><label>Note</label><input id="an" maxlength="40" placeholder="Description / Note (optional)" value="${esc(A.note||'')}"></div>
+    </div>
+
+    <!-- Built-in Calculator Keyboard -->
     <div class="numpad-wrap">
-      <div class="quick-chips">
-        <button type="button" class="quick-chip" data-k="+100">+100</button>
-        <button type="button" class="quick-chip" data-k="+200">+200</button>
-        <button type="button" class="quick-chip" data-k="+500">+500</button>
-        <button type="button" class="quick-chip" data-k="+1000">+1000</button>
-      </div>
+      <div class="calc-calc-display" id="calc_disp">${calcExp || 'Calculator Ready'}</div>
       <div class="numpad-grid">
-        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" data-k="C" style="color:var(--exp)">C</button>
-        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k="⌫">⌫</button>
-        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" class="btn-done" data-a="done" style="background:${col}">✓ Save</button>
+        <button type="button" class="btn-op" data-k="C">C</button>
+        <button type="button" class="btn-op" data-k="/">÷</button>
+        <button type="button" class="btn-op" data-k="*">×</button>
+        <button type="button" class="btn-op" data-k="⌫">⌫</button>
+        
+        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+        <button type="button" class="btn-op" data-k="-">−</button>
+        
+        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+        <button type="button" class="btn-op" data-k="+">+</button>
+        
+        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+        <button type="button" class="btn-done" data-k="done" style="background:${col}">✓ Done</button>
+        
         <button type="button" data-k="0">0</button><button type="button" data-k="00">00</button><button type="button" data-k=".">.</button>
       </div>
     </div>
   </div>`;
 }
 
-// Built-in Numpad Key Press Handler
+// Built-in Calculator & Numpad Engine
 function handleNumpad(k){
-  let v = String(A.amt || '');
-  if(k === 'C'){ v = ''; }
-  else if(k === '⌫'){ v = v.slice(0, -1); }
-  else if(k.startsWith('+')){
-    const addVal = parseInt(k.replace('+', ''), 10) || 0;
-    v = String((parseFloat(v) || 0) + addVal);
+  if(k === 'done'){
+    if(calcExp){
+      try {
+        const val = Function('"use strict";return (' + calcExp.replace(/[^0-9+\-*/.]/g,'') + ')')();
+        A.amt = String(Math.round(val * 100) / 100);
+      } catch(e){}
+      calcExp = '';
+    }
+    if(!A.amt || parseFloat(A.amt) <= 0){
+      return toast('Please enter an amount');
+    }
+    if(A.type !== 'trf' && !A.cat){
+      pickSheet('cat');
+      return;
+    }
+    doneAdd();
+    return;
   }
-  else if(k === '.'){
-    if(!v.includes('.')) v = (v || '0') + '.';
-  }
-  else {
-    if(v === '0' && k !== '0') v = k;
-    else if(v.includes('.')){
-      const parts = v.split('.');
-      if(parts[1].length < 2) v += k;
+
+  if(k === 'C'){
+    calcExp = '';
+    A.amt = '';
+  } else if(k === '⌫'){
+    if(calcExp.length > 0){
+      calcExp = calcExp.slice(0, -1);
     } else {
-      if(v.length < 9) v += k;
+      A.amt = String(A.amt||'').slice(0, -1);
+    }
+  } else if(['+','-','*','/'].includes(k)){
+    if(!calcExp) calcExp = (A.amt || '0');
+    calcExp += k;
+  } else {
+    if(calcExp){
+      calcExp += k;
+    } else {
+      let v = String(A.amt || '');
+      if(k === '.'){
+        if(!v.includes('.')) v = (v || '0') + '.';
+      } else {
+        if(v === '0' && k !== '0') v = k;
+        else if(v.includes('.')){
+          if(v.split('.')[1].length < 2) v += k;
+        } else {
+          if(v.length < 8) v += k;
+        }
+      }
+      A.amt = v;
     }
   }
-  A.amt = v;
-  const disp = $('#disp_amt');
-  if(disp) disp.textContent = v || '0';
+
+  const cdisp = $('#calc_disp');
+  const adisp = $('#disp_amt');
+  if(cdisp) cdisp.textContent = calcExp || (A.amt ? 'Amount: ₹' + A.amt : 'Calculator Ready');
+  
+  if(calcExp){
+    try {
+      const evalVal = Function('"use strict";return (' + calcExp.replace(/[^0-9+\-*/.]/g,'') + ')')();
+      if(adisp) adisp.textContent = isFinite(evalVal) ? String(Math.round(evalVal * 100)/100) : '...';
+    } catch(e){}
+  } else {
+    if(adisp) adisp.textContent = A.amt || '0';
+  }
 }
 
 function pickSheet(kind){
   if(kind==='cat'){
     const l=S.cats[A.type]||[];
-    sheet(`<div class="sh2">Pick Category</div><div class="cg">${l.map(c=>`<button type="button" data-pc="${esc(c[0])}"><span>${c[1]}</span>${esc(c[0])}</button>`).join('')}</div><label class="lab">Add Custom Category</label><div style="display:flex;gap:8px"><input class="f" name="e" placeholder="🙂" maxlength="4" style="width:70px"><input class="f" name="n" placeholder="Category Name" maxlength="18" required></div><button class="ok">Add & Select</button>`,fd=>{
-      const n=fd.get('n').trim();if(!S.cats[A.type])S.cats[A.type]=[];
-      S.cats[A.type].push([n,fd.get('e').trim()||'🏷️']);A.cat=n;save();close();addR();
-    });
+    sheet(`<div class="sh2">Select Category</div>
+      <div class="cg">${l.map(c=>`<button type="button" data-pc="${esc(c[0])}"><span>${c[1]}</span>${esc(c[0])}</button>`).join('')}</div>
+      <label style="color:var(--mu);font-size:12px;margin:10px 0 4px;display:block">Create New Category</label>
+      <div style="display:flex;gap:8px"><input class="f" name="e" placeholder="🏷️" maxlength="4" style="width:65px"><input class="f" name="n" placeholder="Name" maxlength="18" required></div>
+      <button class="ok">Add & Use</button>`,
+      fd=>{
+        const n=fd.get('n').trim();if(!S.cats[A.type])S.cats[A.type]=[];
+        S.cats[A.type].push([n,fd.get('e').trim()||'🏷️']);A.cat=n;save();close();addR();
+      });
   } else {
-    sheet(`<div class="sh2">${kind==='to'?'To Account':'Select Account'}</div>${acs().map(a=>`<button type="button" class="lr" data-pa="${kind}:${a.id}"><span>${esc(a.name)}</span><b class="num" style="color:var(--mu)">${R0(bal(a))}</b></button>`).join('')}`);
+    sheet(`<div class="sh2">${kind==='to'?'Transfer To':'Account'}</div>${acs().map(a=>`<button type="button" class="lr" data-pa="${kind}:${a.id}"><span>${esc(a.name)}</span><b class="num" style="color:var(--mu)">${R0(bal(a))}</b></button>`).join('')}`);
   }
 }
 
 function doneAdd(){
+  if(calcExp){
+    try {
+      const val = Function('"use strict";return (' + calcExp.replace(/[^0-9+\-*/.]/g,'') + ')')();
+      A.amt = String(Math.round(val * 100) / 100);
+    } catch(e){}
+  }
   const n=parseFloat(A.amt);
-  if(!(n>0)) return toast('Please enter an amount');
-  if(A.type!=='trf'&&!A.cat) return toast('Please pick a category');
+  if(!(n>0)) return toast('Enter a valid amount');
+  if(A.type!=='trf'&&!A.cat) return toast('Select a category');
   if(A.type==='trf'&&A.acc===A.to) return toast('Select two different accounts');
+  
   const r={
     id:A.id||uid(),
     type:A.type,
     cat:A.type==='trf'?'':A.cat,
     amt:n,
     note:(A.note||'').trim(),
-    tag:(A.tag||'').replace(/^#/,'').trim(),
-    splitWith:(A.splitWith||'').trim(),
     acc:A.acc,
     to:A.type==='trf'?A.to:'',
     date:A.date||iso(new Date()),
@@ -497,18 +645,18 @@ function sheet(html,fn){
   o.innerHTML=`<form class="sheet-box">${html}</form>`;
   o.classList.add('on');
   o.querySelector('form').onsubmit=e=>{e.preventDefault();if(fn)fn(new FormData(e.target))};
-  const i=o.querySelector('[autofocus]');if(i)setTimeout(()=>i.focus(),80);
+  const i=o.querySelector('[autofocus]');if(i)setTimeout(()=>i.focus(),70);
 }
 const close=()=>$('#ov').classList.remove('on');
 
-// Passcode Logic
-const hp=p=>btoa('km_wm_'+p+'_safe');
+// Passcode Lock
+const hp=p=>btoa('km_pass_'+p+'_wallet');
 function pinSheet(){
-  sheet(S.pin?`<div class="sh2">Passcode Security</div><input class="f" name="p" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="Enter current 4-digit PIN" required autofocus><button class="ok">Turn PIN Off</button>`:`<div class="sh2">Set 4-Digit Passcode</div><input class="f" name="p" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="Create 4-digit PIN" required autofocus><button class="ok">Lock Wallet Now</button>`,fd=>{
+  sheet(S.pin?`<div class="sh2">Passcode Lock</div><input class="f" name="p" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="Current 4-digit PIN" required autofocus><button class="ok">Turn Passcode Off</button>`:`<div class="sh2">Set 4-Digit Passcode</div><input class="f" name="p" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="New 4-digit PIN" required autofocus><button class="ok">Enable Lock</button>`,fd=>{
     const p=fd.get('p');
     if(S.pin){
       if(hp(p)!==S.pin) return toast('Wrong PIN');
-      S.pin='';toast('Passcode turned off');
+      S.pin='';toast('Passcode disabled');
     } else {
       S.pin=hp(p);toast('Passcode activated 🔒');
     }
@@ -516,18 +664,45 @@ function pinSheet(){
   });
 }
 
-function printableStatement(){
-  window.print();
+// Google Drive Sync Modal
+function gdriveSheet(){
+  sheet(`
+    <div class="sh2">Google Drive Sync</div>
+    <p style="color:var(--mu);font-size:13px;margin-bottom:14px">Sync and backup your wallet data to your Google Drive automatically.</p>
+    <label style="color:var(--mu);font-size:12px;margin-bottom:4px;display:block">Auto Backup Frequency</label>
+    <select class="f" name="freq" id="gd_freq">
+      <option value="daily" ${S.gdriveFreq==='daily'?'selected':''}>Daily (Recommended)</option>
+      <option value="weekly" ${S.gdriveFreq==='weekly'?'selected':''}>Weekly</option>
+      <option value="monthly" ${S.gdriveFreq==='monthly'?'selected':''}>Monthly</option>
+      <option value="manual" ${S.gdriveFreq==='manual'?'selected':''}>Manual Only</option>
+    </select>
+    <button type="button" class="ok" id="btn_gd_connect" style="margin-bottom:8px">Download / Save to Drive</button>
+    <button type="submit" class="ok" style="background:var(--c2);color:var(--ink)">Save Frequency</button>
+  `, fd=>{
+    S.gdriveFreq = fd.get('freq');
+    save();close();toast('Drive sync set to: ' + S.gdriveFreq);
+  });
+
+  $('#btn_gd_connect').onclick=()=>{
+    const blob = new Blob([JSON.stringify(S, null, 2)], {type : 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Wallet_Manager_Backup_${iso(new Date())}.json`;
+    a.click();
+    toast('Backup downloaded. Save to your Google Drive!');
+    close();
+  };
 }
 
 function accSheet(id){
   const a=(S.acc||[]).find(x=>x.id===id)||{name:'',g:'Cash',open:''};
-  sheet(`<div class="sh2">${id?'Edit Account':'Add New Account'}</div>
-  <label class="lab">Account Name</label>
-  <input class="f" name="n" placeholder="e.g. HDFC Bank, GooglePay" required maxlength="30" value="${esc(a.name)}" autofocus>
-  <label class="lab">Group</label>
+  sheet(`<div class="sh2">${id?'Edit Account':'New Account'}</div>
+  <label style="color:var(--mu);font-size:12px;display:block;margin-bottom:4px">Account Name</label>
+  <input class="f" name="n" placeholder="e.g. Cash in Hand, UPI, Bank" required maxlength="30" value="${esc(a.name)}" autofocus>
+  <label style="color:var(--mu);font-size:12px;display:block;margin-bottom:4px">Account Group</label>
   <select class="f" name="g">${GR.map(g=>`<option ${g===a.g?'selected':''}>${g}</option>`).join('')}</select>
-  <label class="lab">Starting Balance (₹)</label>
+  <label style="color:var(--mu);font-size:12px;display:block;margin-bottom:4px">Starting Balance (₹)</label>
   <input class="f" name="o" type="number" step="0.01" placeholder="0.00" value="${a.open}">
   <button class="ok">Save Account</button>`,fd=>{
     const v={name:fd.get('n').trim(),g:fd.get('g'),open:parseFloat(fd.get('o'))||0};
@@ -536,7 +711,7 @@ function accSheet(id){
   });
 }
 
-// --- CLOUD AUTH MODAL ---
+// Cloud Auth Modal
 function authSheet(){
   const sb = getSB();
   if(!sb) return toast('Connecting to Supabase cloud...');
@@ -544,21 +719,19 @@ function authSheet(){
     sheet(`
       <div class="sh2">Cloud Account</div>
       <p style="color:var(--mu);margin-bottom:12px">Logged in as:<br><b style="color:var(--ink)">${esc(currentUser.email)}</b></p>
-      <div style="background:var(--c2);padding:14px;border-radius:16px;margin-bottom:16px;font-size:13px;color:var(--inc);display:flex;align-items:center;gap:8px">
-        <span class="sync-dot"></span> Realtime cloud sync is ON.
+      <div style="background:var(--c2);padding:12px;border-radius:14px;margin-bottom:14px;font-size:12.5px;color:var(--inc);display:flex;align-items:center;gap:6px">
+        <span class="sync-dot"></span> Realtime cloud sync is Active.
       </div>
       <button type="button" class="ok" style="background:var(--c2);color:var(--ink);margin-bottom:8px" data-x="manualsync">Sync Cloud Now</button>
       <button type="button" class="ok" style="background:var(--exp);color:#fff" data-x="logout">Log Out</button>
     `);
   } else {
     sheet(`
-      <div class="sh2">Cloud Sign In / Sign Up</div>
-      <p style="color:var(--mu);font-size:13px;margin-bottom:14px">Sync your data to cloud so you never lose it across devices.</p>
-      <label class="lab">Email Address</label>
+      <div class="sh2">Sign In or Sign Up</div>
+      <p style="color:var(--mu);font-size:12.5px;margin-bottom:12px">Access your wallet data across any mobile or desktop device.</p>
       <input class="f" type="email" name="em" id="in_em" placeholder="name@example.com" required autofocus>
-      <label class="lab">Password</label>
-      <input class="f" type="password" name="pw" id="in_pw" placeholder="••••••••" minlength="6" required>
-      <div style="display:flex;gap:8px;margin-top:12px">
+      <input class="f" type="password" name="pw" id="in_pw" placeholder="Password (min 6 characters)" minlength="6" required>
+      <div style="display:flex;gap:8px;margin-top:10px">
         <button type="button" class="ok" data-auth="login" style="flex:1">Log In</button>
         <button type="button" class="ok" data-auth="signup" style="flex:1;background:var(--c2);color:var(--ink)">Sign Up</button>
       </div>
@@ -592,13 +765,13 @@ async function handleAuth(type, em, pw){
     }
     render();
   }catch(err){
-    toast(err.message || 'Authentication failed');
+    toast(err.message || 'Authentication error');
   }
 }
 
 // Global Click Handlers
 document.addEventListener('click',async e=>{
-  const c=e.target.closest('[data-t],[data-v],[data-o],[data-st],[data-e],[data-ty],[data-a],[data-pc],[data-pa],[data-add],[data-x],[data-undo],[data-sd],[data-md],[data-ea],[data-auth],[data-k],[data-settag]');
+  const c=e.target.closest('[data-t],[data-v],[data-o],[data-st],[data-e],[data-ty],[data-a],[data-pc],[data-pa],[data-add],[data-x],[data-undo],[data-sd],[data-ea],[data-auth],[data-k],[data-per]');
   if(e.target===$('#ov')){close();return}
   if(!c)return;const D=c.dataset;
 
@@ -608,9 +781,9 @@ document.addEventListener('click',async e=>{
     return;
   }
 
-  // Tags filter click
-  if(D.settag!==undefined){
-    activeTag = D.settag;
+  // Stats Period toggle
+  if(D.per!==undefined){
+    statsPeriod = D.per;
     render();
     return;
   }
@@ -622,7 +795,7 @@ document.addEventListener('click',async e=>{
     return;
   }
 
-  if(D.t){tab=D.t;mode='';render();scrollTo(0,0)}
+  if(D.t){tab=D.t;render();scrollTo(0,0)}
   else if(D.v){view=D.v;render()}
   else if(D.o){off=Math.min(0,off+ +D.o);render()}
   else if(D.st){st=D.st;render()}
@@ -635,70 +808,68 @@ document.addEventListener('click',async e=>{
   else if(D.a==='cat')pickSheet('cat');
   else if(D.a==='acc')pickSheet('acc');
   else if(D.a==='to')pickSheet('to');
-  else if(D.a==='done')doneAdd();
   else if(D.a==='del'){
     const t=(S.tx||[]).find(x=>x.id===A.id);
     S.tx=(S.tx||[]).filter(x=>x.id!==A.id);
     save();$('#pg').classList.remove('on');render();
-    toast('Transaction deleted',()=>{S.tx.push(t);save();render()});
+    toast('Record deleted',()=>{S.tx.push(t);save();render()});
   }
   else if(D.pc){A.cat=D.pc;close();addR()}
   else if(D.pa){const[kd,id]=D.pa.split(':');if(kd==='to')A.to=id;else A.acc=id;close();addR()}
   else if(D.undo){if(undo)undo();$('#tt').style.display='none'}
-  else if(D.md!==undefined){if(D.md==='add')accSheet();else{mode=D.md;render()}}
   else if(D.ea)accSheet(D.ea);
   else if(D.x){
     const x=D.x;
     if(x==='auth')authSheet();
+    else if(x==='gdrive')gdriveSheet();
+    else if(x==='new_acc')accSheet();
     else if(x==='manualsync'){await syncToCloud();await loadFromCloud();toast('Synced with cloud ✓');close()}
     else if(x==='logout'){const sb=getSB();if(sb)await sb.auth.signOut();currentUser=null;close();render();toast('Logged out')}
     else if(x==='pin')pinSheet();
-    else if(x==='pdf')printableStatement();
+    else if(x==='pdf')window.print();
     else if(x==='theme'){const r=document.documentElement,l=r.dataset.theme==='light'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:light)').matches);r.dataset.theme=l?'dark':'light';close()}
-    else if(x==='calcbox'){
-      sheet(`<div class="sh2">Quick CalcBox</div><input class="f" id="cb_in" placeholder="e.g. 500+250-80" autofocus><div id="cb_res" style="font:800 28px Sora;color:var(--inc);margin-bottom:12px">0</div><button type="button" class="ok" id="cb_use">Use as amount</button>`);
-      const cin=$('#cb_in'),cres=$('#cb_res');
-      cin.oninput=()=>{try{const val=Function('"use strict";return ('+cin.value.replace(/[^0-9+\-*/.]/g,'')+')')();cres.textContent=val?R(val):'0'}catch(e){}};
-      $('#cb_use').onclick=()=>{openAdd();A.amt=cres.textContent.replace(/[^0-9.]/g,'');close();addR();};
-    }
     else if(x==='bk'){
-      sheet(`<div class="sh2">Backup & Restore</div><button type="button" class="ok" id="cp_bk_btn" style="margin-bottom:12px">Copy Full Backup</button><label class="lab">Restore JSON</label><textarea class="f" name="j" rows="4" placeholder="Paste backup JSON"></textarea><button class="ok" style="background:var(--exp);color:#fff">Restore Data</button>`,fd=>{
-        try{const j=JSON.parse(fd.get('j'));if(j.acc&&j.tx){S=cleanState(j);save();close();render();toast('Backup restored ✓')}}catch(z){toast('Invalid backup data')}
+      sheet(`<div class="sh2">JSON Backup</div><button type="button" class="ok" id="cp_bk_btn" style="margin-bottom:10px">Copy Backup Code</button><label style="color:var(--mu);font-size:12px;display:block;margin-bottom:4px">Restore JSON</label><textarea class="f" name="j" rows="4" placeholder="Paste backup JSON"></textarea><button class="ok" style="background:var(--exp);color:#fff">Restore Data</button>`,fd=>{
+        try{const j=JSON.parse(fd.get('j'));if(j.acc&&j.tx){S=cleanState(j);save();close();render();toast('Backup restored ✓')}}catch(z){toast('Invalid backup JSON')}
       });
-      $('#cp_bk_btn').onclick=()=>{navigator.clipboard.writeText(JSON.stringify(S)).then(()=>toast('Backup copied to clipboard'))};
+      $('#cp_bk_btn').onclick=()=>{navigator.clipboard.writeText(JSON.stringify(S)).then(()=>toast('Backup code copied!'))};
     }
     else if(x==='feedback'){
-      sheet(`<div class="sh2">Feedback & Support</div><p style="color:var(--mu);margin-bottom:12px">Built with care for easy personal finance management.</p><textarea class="f" rows="4" placeholder="Write your suggestion or issue..."></textarea><button type="button" class="ok" onclick="close();toast('Feedback received! Thank you.')">Submit</button>`);
+      sheet(`<div class="sh2">Feedback</div><p style="color:var(--mu);font-size:13px;margin-bottom:10px">Have any suggestions to improve Wallet Manager?</p><textarea class="f" rows="4" placeholder="Type your feedback here..."></textarea><button type="button" class="ok" onclick="close();toast('Thank you for your feedback!')">Send Feedback</button>`);
     }
     else if(x==='about'){
       sheet(`<div class="sh2">About Wallet Manager</div>
-      <div style="text-align:center;padding:10px 0">
-        <div style="font-size:48px;margin-bottom:6px">👛</div>
-        <h3 style="font:800 20px Sora">Wallet Manager</h3>
-        <p style="color:var(--mu);font-size:13px;margin:6px 0 16px">Modern, Offline-First Personal Finance Tracker</p>
-        <div style="background:var(--c2);padding:14px;border-radius:18px;font-size:13px;line-height:1.6">
-          Handcrafted by <b>KM (Kamlesh Mali)</b><br>
-          <small style="color:var(--mu)">Equipped with Cloud Sync, Built-in Keypad & Instant Reports</small>
+      <div style="text-align:center;padding:12px 0">
+        <div style="width:68px;height:68px;border-radius:20px;background:#182033;margin:0 auto 12px;display:grid;place-items:center;border:2px solid #2979ff;box-shadow:0 8px 25px rgba(41,121,255,0.3)">
+          <svg viewBox="0 0 100 100" width="46" height="46">
+            <rect x="22" y="16" width="56" height="26" rx="6" fill="#ff3b56" opacity="0.9"/>
+            <rect x="14" y="28" width="72" height="52" rx="14" fill="#1b2034" stroke="#2979ff" stroke-width="3.5"/>
+            <path d="M60 46 H85 A6 6 0 0 1 91 52 V62 A6 6 0 0 1 85 68 H60 Z" fill="#252c48" stroke="#2979ff" stroke-width="2.5"/>
+            <circle cx="77" cy="57" r="4.5" fill="#ff3b56"/>
+          </svg>
+        </div>
+        <h3 style="font:800 19px Sora">Wallet Manager</h3>
+        <p style="color:var(--mu);font-size:12.5px;margin:4px 0 14px">Smart, Offline-First Personal Finance Tracker</p>
+        <div style="background:var(--c2);padding:14px;border-radius:16px;font-size:13px;line-height:1.6">
+          Official Release v2.5<br>
+          <small style="color:var(--mu)">Equipped with In-Built Calculator, Google Drive Sync & Analytics</small>
         </div>
       </div>
-      <button type="button" class="ok" onclick="close()" style="margin-top:14px">Close</button>`);
+      <button type="button" class="ok" onclick="close()" style="margin-top:12px">Close</button>`);
     }
     else if(x==='fresh'){
-      if(fresh){S.tx=[];S.bud={total:0,cat:{}};(S.acc||[]).forEach(a=>a.open=0);save();fresh=0;close();render();toast('All cleared!')}
-      else{fresh=1;toast('Tap "Reset Data" again to erase all records');setTimeout(()=>fresh=0,4000)}
+      if(fresh){S.tx=[];S.bud={total:0,cat:{}};(S.acc||[]).forEach(a=>a.open=0);save();fresh=0;close();render();toast('All clear!')}
+      else{fresh=1;toast('Tap "Reset Data" again to confirm erase');setTimeout(()=>fresh=0,4000)}
     }
   }
 });
 
-// Dynamic Inputs in Add Page
+// Dynamic Note Input
 document.addEventListener('input',e=>{
   if(!A) return;
-  const i=e.target.id;
-  if(i==='an')A.note=e.target.value;
-  if(i==='atag')A.tag=e.target.value;
-  if(i==='asplit')A.splitWith=e.target.value;
-  if(i==='ad')A.date=e.target.value;
-  if(i==='at')A.time=e.target.value;
+  if(e.target.id==='an') A.note=e.target.value;
+  if(e.target.id==='ad') A.date=e.target.value;
+  if(e.target.id==='at') A.time=e.target.value;
 });
 
 document.onkeydown=e=>{if(e.key==='Escape'){close();$('#pg').classList.remove('on')}};
@@ -724,7 +895,15 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)lock()});
 lock();
 render();
 
-// Safe Supabase Session Check
+// Dismiss splash screen smoothly
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const sp = $('#splash');
+    if(sp) sp.classList.add('hide');
+  }, 450);
+});
+
+// Safe Session Check
 function checkSession(){
   const sb = getSB();
   if(!sb){ setTimeout(checkSession, 500); return; }
@@ -745,7 +924,7 @@ function checkSession(){
 }
 checkSession();
 
-// Service worker update
+// Service Worker update
 if('serviceWorker' in navigator){
   navigator.serviceWorker.getRegistrations().then(registrations => {
     for(let r of registrations) r.update();
