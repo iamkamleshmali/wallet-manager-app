@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Supabase JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#0e0f14;--c1:#171922;--c2:#21243a;--ink:#f5f6fb;--mu:#8b90a5;--ln:#282c3c;--inc:#b6ff5c;--exp:#ff5c93;--acc:#b6ff5c;--on:#101114;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -23,7 +25,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;text-a
 main{max-width:480px;margin:0 auto;padding:14px 14px 130px}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .top small{color:var(--mu)}.top h1{font-size:24px;font-weight:800}
-.ib{width:42px;height:42px;border-radius:14px;background:var(--c1);font-size:18px;text-align:center;margin-left:8px}
+.ib{width:42px;height:42px;border-radius:14px;background:var(--c1);font-size:18px;text-align:center;margin-left:8px;position:relative}
+.ib .sync-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--acc);display:none}
+.ib.logged-in .sync-dot{display:block}
 .hero{background:var(--acc);color:var(--on);border-radius:30px;padding:20px 20px 16px;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.35)}
 .hero small{font-weight:600;opacity:.7}.big{font-size:38px;font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin:2px 0 12px;position:relative}
@@ -97,6 +101,12 @@ main{max-width:480px;margin:0 auto;padding:14px 14px 130px}
 <div class="ov" id="ov"></div><div id="tt"></div>
 <div id="lk"><h1>Wallet Manager</h1><div id="lm" style="color:var(--mu)">Enter passcode</div><div class="dots" id="dots"></div><div class="pad" id="pad"></div></div>
 <script>
+// --- SUPABASE CONFIG ---
+const SB_URL = 'https://hgnrczmdmiuxxwynqbjg.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbnJjem1kbWl1eHh3eW5xYmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NzI2ODYsImV4cCI6MjEwNjI0ODY4Nn0.xv0e7ugwzESvHoUD4MJAcDxqTfFxQoKGPeMnmV6JUXs';
+const supabase = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+let currentUser = null;
+
 const DC={exp:[['Food','🍜'],['Transport','🚌'],['Shopping','🛍️'],['Study','📚'],['Hostel / Rent','🏠'],['Recharge','📱'],['Fun','🎮'],['Health','💊'],['Social Life','👫'],['Other','✨']],inc:[['Pocket Money','💸'],['Salary','💼'],['Freelance','💻'],['Scholarship','🎓'],['Gift','🎁'],['Other','💰']]};
 const GR=['Cash','Accounts','Card','Debit Card','Savings','Top-Up/Prepaid','Investments','Overdrafts','Loan','Insurance','Others'];
 const COL=['#b6ff5c','#ff5c93','#5cc8ff','#ffc247','#a78bfa','#4ddbb0','#ff8a4d','#9aa3b5','#f472b6','#7c8cff'];
@@ -105,9 +115,52 @@ const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const m2=n=>Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}),R=n=>'₹'+m2(n),R0=n=>'₹'+Math.round(n).toLocaleString('en-IN');
 const pad=n=>String(n).padStart(2,'0'),ym=d=>d.getFullYear()+'-'+pad(d.getMonth()+1),iso=d=>ym(d)+'-'+pad(d.getDate()),hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
 let S,tab='h',view='l',off=0,st='exp',mode='',sel='',A=null,undo=null,fresh=0;
+
 function seed(){return{acc:[{id:'a1',name:'Cash in Hand',g:'Cash',open:0},{id:'a2',name:'UPI / Bank',g:'Accounts',open:0}],cats:JSON.parse(JSON.stringify(DC)),bud:{total:0,cat:{}},pin:'',tx:[]}}
 try{S=JSON.parse(localStorage.getItem('gz2'))}catch(e){}S=S||seed();
-const save=()=>{try{localStorage.setItem('gz2',JSON.stringify(S))}catch(e){}};
+
+// --- CLOUD SYNC LOGIC ---
+let syncTimeout = null;
+async function syncToCloud(){
+  if(!supabase || !currentUser) return;
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async ()=>{
+    try{
+      await supabase.from('user_data').upsert({
+        user_id: currentUser.id,
+        data: S,
+        updated_at: new Date().toISOString()
+      });
+    }catch(err){
+      console.error('Cloud save failed:', err);
+    }
+  }, 500);
+}
+
+async function loadFromCloud(){
+  if(!supabase || !currentUser) return;
+  try{
+    const { data, error } = await supabase.from('user_data').select('data').eq('user_id', currentUser.id).maybeSingle();
+    if(error) throw error;
+    if(data && data.data && data.data.acc){
+      S = data.data;
+      try{localStorage.setItem('gz2', JSON.stringify(S))}catch(e){}
+      render();
+      toast('Cloud data synced ✓');
+    } else {
+      // First time user, sync local seed data to cloud
+      syncToCloud();
+    }
+  }catch(err){
+    console.error('Cloud load failed:', err);
+  }
+}
+
+const save=()=>{
+  try{localStorage.setItem('gz2',JSON.stringify(S))}catch(e){}
+  syncToCloud();
+};
+
 const vis=()=>S.acc.filter(a=>!a.hid),sum=(L,ty)=>L.filter(t=>t.type===ty).reduce((s,t)=>s+t.amt,0);
 const bal=a=>S.tx.reduce((s,t)=>s+(t.type==='inc'&&t.acc===a.id?t.amt:t.type==='exp'&&t.acc===a.id?-t.amt:t.type==='trf'?(t.to===a.id?t.amt:0)-(t.acc===a.id?t.amt:0):0),a.open);
 const accN=id=>(S.acc.find(a=>a.id===id)||{name:'?'}).name,ce=(ty,n)=>((S.cats[ty]||[]).find(c=>c[0]===n)||[0,'✨'])[1];
@@ -126,7 +179,7 @@ function render(){
   $('#nav').innerHTML=[['h','🏠','Home'],['s','📊','Stats'],['+','','' ],['q','🔎','Search'],['a','👛','Accounts']].map(([i,e,n])=>i==='+'?'<button class="plus" data-add="1" aria-label="Add record"><b>+</b></button>':`<button data-t="${i}" class="${tab===i?'on':''}"><span>${e}</span>${n}</button>`).join('');
   if(tab==='h'){
     const tot=vis().reduce((s,a)=>s+bal(a),0),hr=new Date().getHours();
-    h=`<div class="top"><div><small>${hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'} 👋</small><h1>Wallet Manager</h1></div><div><button class="ib" data-x="tools" aria-label="Tools">⚙️</button></div></div>
+    h=`<div class="top"><div><small>${hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'} 👋</small><h1>Wallet Manager</h1></div><div style="display:flex;align-items:center"><button class="ib ${currentUser?'logged-in':''}" data-x="auth" aria-label="Account">${currentUser?'👤':'☁️'}<span class="sync-dot"></span></button><button class="ib" data-x="tools" aria-label="Tools">⚙️</button></div></div>
     <div class="hero"><small>Total balance</small><div class="big">${R(tot)}</div><div class="chips"><span>Earned <i>${R0(inc)}</i></span><span class="pk">Spent <i>${R0(exp)}</i></span></div></div>
     <div class="bar2">${monthBar(d)}<div class="sg"><button data-v="l" class="${view==='l'?'on':''}">List</button><button data-v="c" class="${view==='c'?'on':''}">Calendar</button></div></div>`;
     if(view==='l'){const ds=[...new Set(L.map(t=>t.date))].sort().reverse();
@@ -143,8 +196,8 @@ function render(){
     const days=[...Array(7)].map((_,i)=>{const x=new Date();x.setDate(x.getDate()-6+i);return[x.toLocaleString('en-US',{weekday:'narrow'}),sum(S.tx.filter(t=>t.date===iso(x)),'exp')]}),mx=Math.max(...days.map(x=>x[1]),1);
     h=`<div class="top"><h1>Stats</h1>${monthBar(d)}</div><div class="sg" style="margin-bottom:12px"><button style="flex:1" data-st="exp" class="${st==='exp'?'on':''}">Spent ${R0(exp)}</button><button style="flex:1" data-st="inc" class="${st==='inc'?'on':''}">Earned ${R0(inc)}</button></div>
     <div class="grid3"><div><small>Avg / day</small><b>${R0(exp/I.el)}</b></div><div><small>vs last month</small><b class="${pe&&exp>pe?'e':'i'}">${pe?(exp>pe?'+':'')+Math.round((exp-pe)/pe*100)+'%':'–'}</b></div><div><small>Top spend</small><b>${top?ce('exp',top[0])+' '+esc(top[0]).slice(0,7):'–'}</b></div></div>
-    <div class="card">${es.length?`<svg class="ring" viewBox="0 0 220 220" role="img" aria-label="Category ring">${arcs}<text x="110" y="106" text-anchor="middle" fill="currentColor" opacity=".55" font-size="12">${st==='exp'?'Spent':'Earned'}</text><text x="110" y="130" text-anchor="middle" fill="currentColor" font-size="20" font-weight="800" font-family="Sora">${R0(tot)}</text></svg>`+es.map(([c,v],i)=>`<button class="lg" data-q="${esc(c)}"><i style="background:${COL[i%10]}"></i><span>${ce(st,c)} ${esc(c)} <small style="color:var(--mu)">${Math.round(v/tot*100)}%</small></span><b class="num">${R0(v)}</b><div class="bt"><u style="width:${v/es[0][1]*100}%;background:${COL[i%10]}"></u></div></button>`).join(''):'<div class="empty">No data for this month yet.</div>'}</div>
-    <div class="card"><h2>Last 7 days</h2><div class="wk">${days.map(([n,v])=>`<div title="${R0(v)}"><i style="height:${v/mx*80}%"></i>${n}</div>`).join('')}</div></div>`}
+    <div class="card">${es.length?`<svg class="ring" viewBox="0 0 220 220" role="img" aria-label="Category ring">${arcs}<text x="110" y="106" text-anchor="middle" fill="currentColor" opacity=".55" font-size="12">${st==='exp'?'Spent':'Earned'}</text><text x="110" y="130" text-anchor="middle" fill="currentColor" font-size="20" font-weight="800" font-family="Sora">${R0(tot)}</text></svg>`+es.map(([c,v],i)=>`<button class="lg" data-q="${esc(c)}"><i style="background:${COL[i%10]}"></i><span>${ce(st,c)}${esc(c)} <small style="color:var(--mu)">${Math.round(v/tot*100)}%</small></span><b class="num">${R0(v)}</b><div class="bt"><u style="width:${v/es[0][1]*100}\%;background:${COL[i%10]}"></u></div></button>`).join(''):'<div class="empty">No data for this month yet.</div>'}</div>
+    <div class="card"><h2>Last 7 days</h2><div class="wk">${days.map(([n,v])=>`<div title="${R0(v)}"><i style="height:${v/mx*80}\%"></i>${n}</div>`).join('')}</div></div>`}
   if(tab==='a'){
     const av=vis(),bs=av.map(x=>[x,bal(x)]),as=bs.filter(b=>b[1]>0).reduce((s,b)=>s+b[1],0),li=-bs.filter(b=>b[1]<0).reduce((s,b)=>s+b[1],0);
     h=`<div class="top" style="position:relative"><h1>Accounts</h1><div>${mode?'<button class="pill" style="padding:9px 18px" data-md="">Done</button>':'<button class="ib" data-menu="1" aria-label="Account options">⋮</button>'}</div><div id="mm"></div></div>
@@ -188,11 +241,77 @@ function csv(){const q=s=>'"'+String(s||'').replace(/"/g,'""')+'"';return'Date,T
 const cp=(s,m)=>{(navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(()=>toast(m)).catch(()=>{toast('Select the text and copy it');const a=$('#ov textarea');if(a){a.focus();a.select()}})};
 function accSheet(id){const a=S.acc.find(x=>x.id===id)||{name:'',g:'Cash',open:''};sheet(`<div class="sh2">${id?'Edit account':'Add account'}</div><input class="f" name="n" placeholder="Account name" required maxlength="30" value="${esc(a.name)}" autofocus><label class="lab">Account group</label><select class="f" name="g">${GR.map(g=>`<option ${g===a.g?'selected':''}>${g}</option>`).join('')}</select><input class="f" name="o" type="number" step="0.01" placeholder="Opening balance (₹)" value="${a.open}"><button class="ok">Save</button>`,fd=>{const v={name:fd.get('n').trim(),g:fd.get('g'),open:parseFloat(fd.get('o'))||0};if(id)Object.assign(a,v);else S.acc.push({id:uid(),...v});save();close();render()})}
 
-document.addEventListener('click',e=>{
-  const c=e.target.closest('[data-t],[data-v],[data-o],[data-st],[data-e],[data-ty],[data-a],[data-pc],[data-pa],[data-add],[data-x],[data-q],[data-undo],[data-sd],[data-menu],[data-md],[data-hd],[data-dl],[data-mv],[data-ea]');
+// --- AUTH SHEET ---
+function authSheet(){
+  if(currentUser){
+    sheet(`
+      <div class="sh2">Cloud Account</div>
+      <p style="color:var(--mu);margin-bottom:12px">Logged in as:<br><b style="color:var(--ink)">${esc(currentUser.email)}</b></p>
+      <div style="background:var(--c2);padding:12px;border-radius:14px;margin-bottom:16px;font-size:13px;color:var(--inc)">
+        🟢 Realtime cloud sync is ACTIVE.
+      </div>
+      <button type="button" class="ok" style="background:var(--c2);color:var(--ink);margin-bottom:8px" data-x="manualsync">Sync Now</button>
+      <button type="button" class="ok" style="background:var(--exp);color:#fff" data-x="logout">Log Out</button>
+    `);
+  } else {
+    sheet(`
+      <div class="sh2">Login or Sign Up</div>
+      <p style="color:var(--mu);font-size:13px;margin-bottom:14px">Sync your data to cloud so you never lose it across devices.</p>
+      <label class="lab">Email</label>
+      <input class="f" type="email" name="em" placeholder="name@example.com" required autofocus>
+      <label class="lab">Password</label>
+      <input class="f" type="password" name="pw" placeholder="••••••••" minlength="6" required>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button type="submit" class="ok" data-auth="login" style="flex:1">Log In</button>
+        <button type="button" class="ok" data-auth="signup" style="flex:1;background:var(--c2);color:var(--ink)">Sign Up</button>
+      </div>
+    `, async fd=>{
+      // default submit is login
+      handleAuth('login', fd.get('em'), fd.get('pw'));
+    });
+  }
+}
+
+async function handleAuth(type, em, pw){
+  if(!em || !pw) return toast('Enter email & password');
+  try{
+    if(type==='login'){
+      const { data, error } = await supabase.auth.signInWithPassword({ email: em, password: pw });
+      if(error) throw error;
+      currentUser = data.user;
+      toast('Logged in successfully!');
+      close();
+      loadFromCloud();
+    } else {
+      const { data, error } = await supabase.auth.signUp({ email: em, password: pw });
+      if(error) throw error;
+      if(data.user && !data.session){
+        toast('Confirmation email sent! Check inbox.');
+      } else {
+        currentUser = data.user;
+        toast('Account created & logged in!');
+        syncToCloud();
+      }
+      close();
+    }
+    render();
+  }catch(err){
+    toast(err.message || 'Auth failed');
+  }
+}
+
+document.addEventListener('click',async e=>{
+  const c=e.target.closest('[data-t],[data-v],[data-o],[data-st],[data-e],[data-ty],[data-a],[data-pc],[data-pa],[data-add],[data-x],[data-q],[data-undo],[data-sd],[data-menu],[data-md],[data-hd],[data-dl],[data-mv],[data-ea],[data-auth]');
   if(e.target===$('#ov')){close();return}
   if(!e.target.closest('[data-menu],.menu'))$('#mm')&&($('#mm').innerHTML='');
   if(!c)return;const D=c.dataset;
+  if(D.auth==='signup'){
+    const form = $('#ov form');
+    const em = form.querySelector('[name=em]').value.trim();
+    const pw = form.querySelector('[name=pw]').value.trim();
+    handleAuth('signup', em, pw);
+    return;
+  }
   if(D.t==='q')searchSheet('');else if(D.t){tab=D.t;mode='';render();scrollTo(0,0)}else if(D.v){view=D.v;render()}else if(D.o){off=Math.min(0,off+ +D.o);render()}else if(D.st){st=D.st;render()}
   else if(D.sd){sel=D.sd;render()}
   else if(D.add!==undefined)openAdd();else if(D.e)openAdd(S.tx.find(t=>t.id===D.e));
@@ -213,8 +332,11 @@ document.addEventListener('click',e=>{
   else if(D.mv){const[id,dir]=D.mv.split(':'),i=S.acc.findIndex(a=>a.id===id);let j=i+ +dir;while(S.acc[j]&&S.acc[j].g!==S.acc[i].g)j+=+dir;if(S.acc[j]){[S.acc[i],S.acc[j]]=[S.acc[j],S.acc[i]];save();render()}}
   else if(D.ea)accSheet(D.ea);
   else if(D.x){const x=D.x;
-    if(x==='search')searchSheet('');
-    else if(x==='tools')sheet(`<div class="sh2">Tools</div>${[['theme','🌓','Light / dark theme'],['pin','🔒','Passcode lock'],['csv','📄','Export CSV for Excel'],['bk','☁️','Backup and restore'],['fresh','🧹','Start fresh']].map(([i,e,n])=>`<button type="button" class="lr" data-x="${i}"><span>${e} ${n}</span><span style="color:var(--mu)">›</span></button>`).join('')}`);
+    if(x==='auth')authSheet();
+    else if(x==='manualsync'){await syncToCloud();await loadFromCloud();toast('Synced with cloud ✓');close()}
+    else if(x==='logout'){if(supabase)await supabase.auth.signOut();currentUser=null;close();render();toast('Logged out')}
+    else if(x==='search')searchSheet('');
+    else if(x==='tools')sheet(`<div class="sh2">Tools</div>${[['theme','🌓','Light / dark theme'],['pin','🔒','Passcode lock'],['csv','📄','Export CSV for Excel'],['bk','☁️','Backup and restore'],['fresh','🧹','Start fresh']].map(([i,e,n])=>`<button type="button" class="lr" data-x="${i}"><span>${e}${n}</span><span style="color:var(--mu)">›</span></button>`).join('')}`);
     else if(x==='pin')pinSheet();
     else if(x==='csv')sheet(`<div class="sh2">Export CSV</div><p style="color:var(--mu);margin-bottom:10px">Copy this, paste into a text file, save as .csv and open it in Excel or Google Sheets.</p><textarea class="f" rows="7" readonly>${esc(csv())}</textarea><button type="button" class="ok" data-x="cpcsv">Copy CSV</button>`);
     else if(x==='cpcsv')cp(csv(),'CSV copied');
@@ -234,5 +356,21 @@ $('#pad').onclick=e=>{const b=e.target.closest('[data-lk]');if(!b)return;const k
 const lock=()=>{if(S.pin){en='';$('#lm').textContent='Enter passcode';lockUI();lk.classList.add('on')}};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)lock()});
 lock();render();
+
+// Check existing login session on load
+if(supabase){
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if(session && session.user){
+      currentUser = session.user;
+      loadFromCloud();
+      render();
+    }
+  });
+  supabase.auth.onAuthStateChange((_event, session) => {
+    currentUser = session ? session.user : null;
+    render();
+  });
+}
+
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 </script></body></html>
