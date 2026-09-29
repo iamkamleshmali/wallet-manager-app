@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Money Manager: Track Your Money</title>
+<title>Wallet Manager: Money Tracker</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0e0f14">
 <meta name="mobile-web-app-capable" content="yes">
@@ -95,7 +95,7 @@ main{max-width:480px;margin:0 auto;padding:14px 14px 130px}
 <nav class="nav" id="nav"></nav>
 <div class="pg" id="pg"></div>
 <div class="ov" id="ov"></div><div id="tt"></div>
-<div id="lk"><h1>Track Your Money</h1><div id="lm" style="color:var(--mu)">Enter passcode</div><div class="dots" id="dots"></div><div class="pad" id="pad"></div></div>
+<div id="lk"><h1>Wallet Manager</h1><div id="lm" style="color:var(--mu)">Enter passcode</div><div class="dots" id="dots"></div><div class="pad" id="pad"></div></div>
 <script>
 const DC={exp:[['Food','🍜'],['Transport','🚌'],['Shopping','🛍️'],['Study','📚'],['Hostel / Rent','🏠'],['Recharge','📱'],['Fun','🎮'],['Health','💊'],['Social Life','👫'],['Other','✨']],inc:[['Pocket Money','💸'],['Salary','💼'],['Freelance','💻'],['Scholarship','🎓'],['Gift','🎁'],['Other','💰']]};
 const GR=['Cash','Accounts','Card','Debit Card','Savings','Top-Up/Prepaid','Investments','Overdrafts','Loan','Insurance','Others'];
@@ -126,7 +126,7 @@ function render(){
   $('#nav').innerHTML=[['h','🏠','Home'],['s','📊','Stats'],['+','','' ],['q','🔎','Search'],['a','👛','Accounts']].map(([i,e,n])=>i==='+'?'<button class="plus" data-add="1" aria-label="Add record"><b>+</b></button>':`<button data-t="${i}" class="${tab===i?'on':''}"><span>${e}</span>${n}</button>`).join('');
   if(tab==='h'){
     const tot=vis().reduce((s,a)=>s+bal(a),0),hr=new Date().getHours();
-    h=`<div class="top"><div><small>${hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'} 👋</small><h1>Track Your Money</h1></div><div><button class="ib" data-x="tools" aria-label="Tools">⚙️</button></div></div>
+    h=`<div class="top"><div><small>${hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'} 👋</small><h1>Wallet Manager</h1></div><div><button class="ib" data-x="tools" aria-label="Tools">⚙️</button></div></div>
     <div class="hero"><small>Total balance</small><div class="big">${R(tot)}</div><div class="chips"><span>Earned <i>${R0(inc)}</i></span><span class="pk">Spent <i>${R0(exp)}</i></span></div></div>
     <div class="bar2">${monthBar(d)}<div class="sg"><button data-v="l" class="${view==='l'?'on':''}">List</button><button data-v="c" class="${view==='c'?'on':''}">Calendar</button></div></div>`;
     if(view==='l'){const ds=[...new Set(L.map(t=>t.date))].sort().reverse();
