@@ -17,23 +17,20 @@
  color-scheme:dark
 }
 @media(prefers-color-scheme:light){
-:root:not([data-theme=dark]){
- --bg:#f2f4fa;--c1:#fff;--c2:#e8ecf6;--c3:#dbe1f2;
- --ink:#111420;--mu:#6a728a;--ln:#dce1ef;
- --inc:#1976d2;--exp:#e53935;--trf:#7b1fa2;--acc:#1976d2;color-scheme:light
-}}
-:root[data-theme=light{
+ :root:not([data-theme=dark]){
+  --bg:#f2f4fa;--c1:#fff;--c2:#e8ecf6;--c3:#dbe1f2;
+  --ink:#111420;--mu:#6a728a;--ln:#dce1ef;
+  --inc:#1976d2;--exp:#e53935;--trf:#7b1fa2;--acc:#1976d2;color-scheme:light
+ }
+}
+:root[data-theme=light]{
  --bg:#f2f4fa;--c1:#fff;--c2:#e8ecf6;--c3:#dbe1f2;
  --ink:#111420;--mu:#6a728a;--ln:#dce1ef;
  --inc:#1976d2;--exp:#e53935;--trf:#7b1fa2;--acc:#1976d2;color-scheme:light
 }
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{
- background:var(--bg);color:var(--ink);
- font:500 14px/1.4 'Plus Jakarta Sans',system-ui,sans-serif;
- min-height:100vh;overflow-x:hidden
-}
+body{background:var(--bg);color:var(--ink);font:500 14px/1.4 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
 h1,h2,.big,.num{font-family:Sora,'Plus Jakarta Sans',sans-serif}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;text-align:inherit}
 input,select,textarea{font:inherit}
@@ -43,305 +40,141 @@ main{max-width:480px;margin:auto;padding:14px 14px 110px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
 .top small{color:var(--mu);font-size:11.5px;font-weight:600}
 .top h1{font-size:21px;font-weight:800;margin-top:2px}
-.avatar{
- width:42px;height:42px;border-radius:50%;
- background:linear-gradient(135deg,var(--inc),#7357ff);
- color:#fff;display:grid;place-items:center;
- font:800 14px Sora;border:2px solid var(--c1);
- box-shadow:0 4px 15px rgba(41,121,255,.25)
-}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--inc),#7357ff);color:#fff;display:grid;place-items:center;font:800 14px Sora;border:2px solid var(--c1);box-shadow:0 4px 15px rgba(41,121,255,.25)}
 .avatar:active{transform:scale(.94)}
 
-.summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
-.sumcard{
- background:var(--c1);border:1px solid var(--ln);
- border-radius:18px;padding:13px 14px
-}
-.sumcard.total{grid-column:1/-1;padding:16px}
-.sumcard small{display:block;color:var(--mu);font-size:11px;font-weight:700;margin-bottom:5px}
-.sumcard b{font:800 18px Sora}
-.sumcard.total b{font-size:26px}
-.sumcard .income{color:var(--inc)}
-.sumcard .expense{color:var(--exp)}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;background:var(--c1);border:1px solid var(--ln);border-radius:18px;padding:12px 14px;align-items:center}
+.sumcol{text-align:center}
+.sumcol small{display:block;color:var(--mu);font-size:11px;font-weight:700;margin-bottom:4px;letter-spacing:.2px;text-transform:capitalize}
+.sumcol b{font:700 14px Sora;display:block;white-space:nowrap}
+.sumcol .income{color:var(--inc)}
+.sumcol .expense{color:var(--exp)}
+.sumcol .total{color:var(--ink)}
 
-.bar2{margin:8px 0 12px;display:flex;justify-content:center}
-.mn{
- display:inline-flex;align-items:center;background:var(--c1);
- border-radius:99px;padding:2px;border:1px solid var(--ln)
-}
+.bar2{margin:6px 0 12px;display:flex;justify-content:center}
+.mn{display:inline-flex;align-items:center;background:var(--c1);border-radius:99px;padding:2px;border:1px solid var(--ln)}
 .mn button{width:30px;height:30px;font-size:18px;text-align:center}
-.mn b{min-width:100px;text-align:center;font-size:12.5px}
+.mn b{min-width:100px;text-align:center;font-size:12px;font-weight:700}
 
-.day{
- background:var(--c1);border-radius:18px;padding:4px 14px;
- margin-bottom:10px;border:1px solid var(--ln)
-}
-.dh{
- display:flex;justify-content:space-between;padding:9px 0 5px;
- color:var(--mu);font-size:12px;font-weight:700
-}
-.r{
- display:grid;grid-template-columns:40px 1fr auto;gap:11px;
- align-items:center;width:100%;padding:10px 0
-}
+.day{background:var(--c1);border-radius:18px;padding:6px 14px 2px;margin-bottom:10px;border:1px solid var(--ln)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:7px 0 9px;border-bottom:1px solid var(--ln);color:var(--mu);font-size:11.5px;font-weight:600}
+.dh-left{display:flex;align-items:center;gap:6px}
+.dh-date{font:800 17px Sora;color:var(--ink);line-height:1}
+.dh-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(--c2);color:var(--ink)}
+.dh-badge.sun{background:rgba(255,59,86,.18);color:var(--exp)}
+.dh-badge.sat{background:rgba(41,121,255,.18);color:var(--inc)}
+.dh-sub{font-size:11px;color:var(--mu)}
+.dh-right{display:flex;gap:10px;align-items:center;font-weight:700;font-size:11.5px}
+
+.r{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;width:100%;padding:10px 0;text-align:left}
 .r+.r{border-top:1px solid var(--ln)}
-.ic{
- width:40px;height:40px;border-radius:14px;background:var(--c2);
- display:grid;place-items:center;font-size:18px
-}
-.r b{font-size:13px}
+.ic{width:36px;height:36px;border-radius:12px;background:var(--c2);display:grid;place-items:center;font-size:17px}
+.r b{font-size:13px;font-weight:600;display:block}
 .r small{display:block;color:var(--mu);font-size:11px;margin-top:2px}
-.num{font-weight:700;font-size:14px;white-space:nowrap}
+.num{font-weight:700;font-size:13.5px;white-space:nowrap;font-family:Sora,sans-serif}
 .i{color:var(--inc)}.e{color:var(--exp)}.t{color:var(--trf)}
 .empty{text-align:center;color:var(--mu);padding:45px 10px;font-size:13px}
 
-.card{
- background:var(--c1);border-radius:20px;padding:16px;
- margin-bottom:10px;border:1px solid var(--ln)
-}
+.card{background:var(--c1);border-radius:20px;padding:16px;margin-bottom:10px;border:1px solid var(--ln)}
 .card h2{font-size:14px;margin-bottom:10px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.grid3>div{
- background:var(--c1);border-radius:16px;padding:10px;
- border:1px solid var(--ln)
-}
+.grid3>div{background:var(--c1);border-radius:16px;padding:10px;border:1px solid var(--ln)}
 .grid3 small{display:block;color:var(--mu);font-size:10px;margin-bottom:4px}
 .grid3 b{font:700 12px Sora}
 
-.sg{
- display:flex;background:var(--c1);border-radius:99px;
- padding:2px;border:1px solid var(--ln)
-}
-.sg button{
- flex:1;padding:7px 10px;border-radius:99px;
- font-size:11.5px;font-weight:700;color:var(--mu)
-}
+.sg{display:flex;background:var(--c1);border-radius:99px;padding:2px;border:1px solid var(--ln)}
+.sg button{flex:1;padding:7px 10px;border-radius:99px;font-size:11.5px;font-weight:700;color:var(--mu)}
 .sg .on{background:var(--c2);color:var(--ink)}
 
 .ring{display:block;margin:4px auto 10px;width:190px;height:190px}
-.lg{
- display:grid;grid-template-columns:10px 1fr auto;
- gap:10px;align-items:center;padding:8px 0
-}
+.lg{display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;padding:8px 0}
 .lg i{width:10px;height:10px;border-radius:3px}
 .lg .bt{grid-column:2/4;height:5px;border-radius:4px;background:var(--c2);overflow:hidden}
 .lg .bt u{display:block;height:100%}
 .wk{display:flex;align-items:flex-end;gap:6px;height:95px}
-.wk div{
- flex:1;height:100%;display:flex;flex-direction:column;
- justify-content:flex-end;align-items:center;gap:4px;
- font-size:10px;color:var(--mu)
-}
+.wk div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;font-size:10px;color:var(--mu)}
 .wk i{width:100%;border-radius:6px;background:var(--exp);min-height:4px}
 
-.acc{
- width:100%;background:var(--c1);border:1px solid var(--ln);
- border-radius:18px;padding:12px 14px;margin-bottom:8px;
- display:flex;justify-content:space-between;align-items:center
-}
+.acc{width:100%;background:var(--c1);border:1px solid var(--ln);border-radius:18px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
 .acl{display:flex;align-items:center;gap:10px}
-.aci{
- width:38px;height:38px;border-radius:13px;background:var(--c2);
- display:grid;place-items:center;font-size:18px
-}
+.aci{width:38px;height:38px;border-radius:13px;background:var(--c2);display:grid;place-items:center;font-size:18px}
 .acc small{color:var(--mu);font-size:11px}
 
 .more{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.mi{
- background:var(--c1);border:1px solid var(--ln);border-radius:18px;
- padding:16px 7px;display:flex;flex-direction:column;
- align-items:center;text-align:center;gap:8px
-}
+.mi{background:var(--c1);border:1px solid var(--ln);border-radius:18px;padding:16px 7px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
 .mi:active{transform:scale(.97)}
-.mic{
- width:42px;height:42px;border-radius:14px;background:var(--c2);
- display:grid;place-items:center;font-size:20px
-}
+.mic{width:42px;height:42px;border-radius:14px;background:var(--c2);display:grid;place-items:center;font-size:20px}
 .mi span{font-size:11.5px;font-weight:700}
 .foot{text-align:center;margin:28px 0 8px;color:var(--mu);font-size:11px;line-height:1.6}
 
-.nav{
- position:fixed;left:50%;transform:translateX(-50%);
- bottom:calc(10px + env(safe-area-inset-bottom,0px));
- width:calc(100% - 24px);max-width:456px;
- background:var(--c1);border:1px solid var(--ln);
- border-radius:30px;display:grid;grid-template-columns:repeat(4,1fr);
- align-items:center;padding:5px 6px;z-index:10;
- box-shadow:0 10px 30px rgba(0,0,0,.35)
-}
-.nav button{
- display:flex;flex-direction:column;align-items:center;
- font-size:10px;font-weight:700;color:var(--mu);
- padding:6px 0;border-radius:18px;gap:2px
-}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));width:calc(100% - 24px);max-width:456px;background:var(--c1);border:1px solid var(--ln);border-radius:30px;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;padding:5px 6px;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.nav button{display:flex;flex-direction:column;align-items:center;font-size:10px;font-weight:700;color:var(--mu);padding:6px 0;border-radius:18px;gap:2px}
 .nav span{font-size:18px}
 .nav .on{color:var(--ink);background:var(--c2)}
 
-.pg{
- position:fixed;inset:0;background:var(--bg);z-index:25;
- display:none;flex-direction:column;overflow:hidden
-}
+.pg{position:fixed;inset:0;background:var(--bg);z-index:25;display:none;flex-direction:column;overflow:hidden}
 .pg.on{display:flex}
-.pg .in{
- max-width:480px;width:100%;margin:auto;flex:1;
- display:flex;flex-direction:column;padding:10px 14px;overflow-y:auto
-}
+.pg .in{max-width:480px;width:100%;margin:auto;flex:1;display:flex;flex-direction:column;padding:10px 14px;overflow-y:auto}
 .ph{display:flex;align-items:center;gap:10px;padding:4px 0 10px}
 .ph h2{flex:1;font-size:18px}
-.ph button{
- width:38px;height:38px;border-radius:12px;
- background:var(--c1);text-align:center;border:1px solid var(--ln)
-}
+.ph button{width:38px;height:38px;border-radius:12px;background:var(--c1);text-align:center;border:1px solid var(--ln)}
 .tp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.tp button{
- padding:10px;border-radius:14px;background:var(--c1);
- font-weight:700;text-align:center;border:2px solid transparent;font-size:13px
-}
-.fl{
- display:grid;grid-template-columns:85px 1fr;align-items:center;
- padding:11px 4px;border-bottom:1px solid var(--ln);width:100%
-}
+.tp button{padding:10px;border-radius:14px;background:var(--c1);font-weight:700;text-align:center;border:2px solid transparent;font-size:13px}
+.fl{display:grid;grid-template-columns:85px 1fr;align-items:center;padding:11px 4px;border-bottom:1px solid var(--ln);width:100%}
 .fl label{color:var(--mu);font-size:13px}
 .fl input{background:none;border:0;color:var(--ink);padding:0}
 .fl input:focus{outline:0}
 .amw{font:700 20px Sora;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.np{
- background:var(--c1);border-radius:22px 22px 0 0;
- padding:10px 10px calc(12px + env(safe-area-inset-bottom,0px));
- border-top:1px solid var(--ln);margin-top:auto
-}
+.np{background:var(--c1);border-radius:22px 22px 0 0;padding:10px 10px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--ln);margin-top:auto}
 .cd{text-align:right;color:var(--mu);font:700 13px Sora;min-height:20px;padding:0 6px 6px}
 .ng{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:8px}
-.ng button{
- padding:12px 0;background:var(--c2);border-radius:14px;
- font:700 18px Sora;text-align:center
-}
+.ng button{padding:12px 0;background:var(--c2);border-radius:14px;font:700 18px Sora;text-align:center}
 .ng .op{background:var(--c3);color:var(--inc)}
-.done{
- width:100%;padding:13px;border-radius:14px;
- font-weight:800;color:#fff;text-align:center
-}
+.done{width:100%;padding:13px;border-radius:14px;font-weight:800;color:#fff;text-align:center}
 
-.ov{
- position:fixed;inset:0;background:rgba(0,0,0,.72);
- display:none;align-items:flex-end;justify-content:center;z-index:35
-}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:flex-end;justify-content:center;z-index:35}
 .ov.on{display:flex}
-.box{
- width:100%;max-width:480px;max-height:88vh;overflow:auto;
- background:var(--c1);padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px));
- border-radius:26px 26px 0 0;border-top:1px solid var(--ln)
-}
+.box{width:100%;max-width:480px;max-height:88vh;overflow:auto;background:var(--c1);padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px));border-radius:26px 26px 0 0;border-top:1px solid var(--ln)}
 .sh2{font:800 18px Sora;margin-bottom:12px}
 .lb{color:var(--mu);font-size:12px;display:block;margin:5px 0}
-.f{
- width:100%;padding:12px 14px;border-radius:14px;
- border:1px solid var(--ln);background:var(--bg);
- color:var(--ink);margin-bottom:9px
-}
+.f{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--ln);background:var(--bg);color:var(--ink);margin-bottom:9px}
 textarea.f{min-height:120px;resize:vertical}
-.ok{
- width:100%;padding:13px;border-radius:14px;
- font-weight:800;font-size:14px;background:var(--acc);
- color:#fff;text-align:center
-}
+.ok{width:100%;padding:13px;border-radius:14px;font-weight:800;font-size:14px;background:var(--acc);color:#fff;text-align:center}
 .cg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.cg button{
- background:var(--c2);border-radius:14px;padding:10px 4px;
- text-align:center;font-size:12px;font-weight:600
-}
+.cg button{background:var(--c2);border-radius:14px;padding:10px 4px;text-align:center;font-size:12px;font-weight:600}
 .cg span{display:block;font-size:22px}
-.lr{
- display:flex;justify-content:space-between;
- padding:13px 4px;width:100%;border-top:1px solid var(--ln)
-}
+.lr{display:flex;justify-content:space-between;padding:13px 4px;width:100%;border-top:1px solid var(--ln)}
 
-#tt{
- position:fixed;left:50%;transform:translateX(-50%);
- bottom:calc(90px + env(safe-area-inset-bottom,0px));
- background:var(--ink);color:var(--bg);padding:9px 16px;
- border-radius:12px;font-weight:700;font-size:13px;
- z-index:70;display:none;max-width:90%
-}
+#tt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:12px;font-weight:700;font-size:13px;z-index:70;display:none;max-width:90%}
 #tt button{font-weight:800;margin-left:10px;color:var(--exp)}
 
-#lk{
- position:fixed;inset:0;background:var(--bg);z-index:90;
- display:none;flex-direction:column;align-items:center;
- justify-content:center;gap:16px
-}
+#lk{position:fixed;inset:0;background:var(--bg);z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px}
 #lk.on{display:flex}
 .dots{display:flex;gap:12px}
-.dots i{
- width:14px;height:14px;border-radius:50%;
- border:2px solid var(--mu)
-}
+.dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--mu)}
 .dots .f1{background:var(--inc);border-color:var(--inc)}
 .pad{display:grid;grid-template-columns:repeat(3,70px);gap:12px}
-.pad button{
- height:70px;border-radius:50%;background:var(--c1);
- font:700 22px Sora;text-align:center;border:1px solid var(--ln)
-}
+.pad button{height:70px;border-radius:50%;background:var(--c1);font:700 22px Sora;text-align:center;border:1px solid var(--ln)}
 
 /* SPLASH */
-#splash{
- position:fixed;inset:0;background:var(--bg);z-index:100;
- display:flex;align-items:center;justify-content:center;
- transition:opacity .45s ease,visibility .45s ease
-}
+#splash{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease,visibility .45s ease}
 #splash.hide{opacity:0;visibility:hidden;pointer-events:none}
-.splashLogo{
- width:82px;height:82px;border-radius:25px;
- background:linear-gradient(135deg,#2979ff,#7357ff);
- display:grid;place-items:center;color:#fff;
- font:800 30px Sora;
- box-shadow:0 15px 45px rgba(41,121,255,.35);
- animation:splashPulse 1.2s ease-in-out infinite
-}
-.splashText{
- position:absolute;margin-top:150px;
- font:800 18px Sora;letter-spacing:-.5px
-}
-@keyframes splashPulse{
- 0%,100%{transform:scale(.94);opacity:.85}
- 50%{transform:scale(1);opacity:1}
-}
+.splashLogo{width:82px;height:82px;border-radius:25px;background:linear-gradient(135deg,#2979ff,#7357ff);display:grid;place-items:center;color:#fff;font:800 30px Sora;box-shadow:0 15px 45px rgba(41,121,255,.35);animation:splashPulse 1.2s ease-in-out infinite}
+.splashText{position:absolute;margin-top:150px;font:800 18px Sora;letter-spacing:-.5px}
+@keyframes splashPulse{0%,100%{transform:scale(.94);opacity:.85}50%{transform:scale(1);opacity:1}}
 
 /* AUTH */
-#authGate{
- position:fixed;inset:0;background:var(--bg);z-index:80;
- display:none;overflow:auto
-}
+#authGate{position:fixed;inset:0;background:var(--bg);z-index:80;display:none;overflow:auto}
 #authGate.on{display:block}
-.authWrap{
- min-height:100%;max-width:480px;margin:auto;
- padding:45px 20px 30px;display:flex;
- flex-direction:column;justify-content:center
-}
-.authLogo{
- width:70px;height:70px;border-radius:22px;
- background:linear-gradient(135deg,#2979ff,#7357ff);
- display:grid;place-items:center;color:#fff;
- font:800 24px Sora;margin:0 auto 18px
-}
+.authWrap{min-height:100%;max-width:480px;margin:auto;padding:45px 20px 30px;display:flex;flex-direction:column;justify-content:center}
+.authLogo{width:70px;height:70px;border-radius:22px;background:linear-gradient(135deg,#2979ff,#7357ff);display:grid;place-items:center;color:#fff;font:800 24px Sora;margin:0 auto 18px}
 .authWrap h1{text-align:center;font:800 24px Sora}
-.authWrap .sub{
- color:var(--mu);text-align:center;font-size:12.5px;
- margin:8px 0 25px
-}
-.authCard{
- background:var(--c1);border:1px solid var(--ln);
- border-radius:24px;padding:18px
-}
+.authWrap .sub{color:var(--mu);text-align:center;font-size:12.5px;margin:8px 0 25px}
+.authCard{background:var(--c1);border:1px solid var(--ln);border-radius:24px;padding:18px}
 .authCard .ok{margin-top:4px}
-.authSwitch{
- margin-top:16px;text-align:center;color:var(--mu);font-size:12px
-}
+.authSwitch{margin-top:16px;text-align:center;color:var(--mu);font-size:12px}
 .authSwitch button{color:var(--inc);font-weight:800}
-.authMsg{
- color:var(--mu);font-size:11.5px;text-align:center;
- margin-top:12px;line-height:1.5
-}
+.authMsg{color:var(--mu);font-size:11.5px;text-align:center;margin-top:12px;line-height:1.5}
 </style>
 </head>
 
@@ -557,26 +390,36 @@ function toast(m,u){
 
 const stamp=()=>+localStorage.getItem('gz_mod')||0;
 
+const hasLocalData=()=>Boolean(
+ (Array.isArray(S?.tx)&&S.tx.length>0)||
+ (Array.isArray(S?.acc)&&S.acc.some(a=>Number(a.open||0)!==0))
+);
+
 async function push(){
  const c=getSB();
  if(!c||!user)return false;
 
  const ts=Date.now();
 
- const{error}=await c.from('user_data').upsert({
-  user_id:user.id,
-  data:S,
-  updated_at:new Date(ts).toISOString()
- });
+ try{
+  const{error}=await c.from('user_data').upsert({
+   user_id:user.id,
+   data:S,
+   updated_at:new Date(ts).toISOString()
+  });
 
- if(error){
-  console.error(error);
-  toast('Sync failed: '+error.message);
-  return false
+  if(error){
+   console.error(error);
+   toast('Sync failed: '+error.message);
+   return false;
+  }
+
+  localStorage.setItem('gz_mod',ts);
+  return true;
+ }catch(err){
+  console.error(err);
+  return false;
  }
-
- localStorage.setItem('gz_mod',ts);
- return true;
 }
 
 let tm;
@@ -584,7 +427,7 @@ let tm;
 const sync=()=>{
  if(user){
   clearTimeout(tm);
-  tm=setTimeout(push,400)
+  tm=setTimeout(push,400);
  }
 };
 
@@ -600,26 +443,40 @@ async function pull(){
  const c=getSB();
  if(!c||!user)return;
 
- const{data,error}=await c.from('user_data')
-  .select('data,updated_at')
-  .eq('user_id',user.id)
-  .maybeSingle();
+ try{
+  const{data,error}=await c.from('user_data')
+   .select('data,updated_at')
+   .eq('user_id',user.id)
+   .maybeSingle();
 
- if(error){
-  console.error(error);
-  toast('Cloud load failed: '+error.message);
-  return
- }
+  if(error){
+   console.error(error);
+   toast('Cloud load failed: '+error.message);
+   return;
+  }
 
- const ct=data?new Date(data.updated_at).getTime():0;
+  const cloudHasValidData=Boolean(
+   data&&data.data&&Array.isArray(data.data.acc)&&data.data.acc.length
+  );
+  const ct=data&&data.updated_at?new Date(data.updated_at).getTime():0;
 
- if(!data||!data.data||!data.data.acc||stamp()>ct){
-  await push();
- }else{
-  S=clean(data.data);
-  localStorage.setItem('gz2',JSON.stringify(S));
-  localStorage.setItem('gz_mod',ct);
-  render();
+  if(cloudHasValidData){
+   if(hasLocalData()&&stamp()>ct){
+    await push();
+   }else{
+    S=clean(data.data);
+    localStorage.setItem('gz2',JSON.stringify(S));
+    localStorage.setItem('gz_mod',ct);
+    render();
+   }
+  }else{
+   if(hasLocalData()){
+    await push();
+   }
+  }
+ }catch(err){
+  console.error(err);
+  toast('Cloud sync offline or unavailable');
  }
 }
 
@@ -705,19 +562,19 @@ function render(){
   </div>
 
   <div class="summary">
-   <div class="sumcard total">
-    <small>Total Balance</small>
-    <b>${R(tot)}</b>
-   </div>
-
-   <div class="sumcard">
+   <div class="sumcol">
     <small>Income</small>
     <b class="income">${R0(inc)}</b>
    </div>
 
-   <div class="sumcard">
-    <small>Expense</small>
+   <div class="sumcol">
+    <small>Expenses</small>
     <b class="expense">${R0(exp)}</b>
+   </div>
+
+   <div class="sumcol">
+    <small>Total</small>
+    <b class="total">${tot<0?'−':''}${R0(Math.abs(tot))}</b>
    </div>
   </div>
 
@@ -729,15 +586,27 @@ function render(){
   h+=ds.length?
    ds.map(x=>{
     const q=sortT(L.filter(t=>t.date===x));
-    const n=sum(q,'inc')-sum(q,'exp');
+    const dayInc=sum(q,'inc');
+    const dayExp=sum(q,'exp');
+    const dt=new Date(x+'T00:00');
+    const dNum=dt.getDate();
+    const dDay=dt.toLocaleString('en-US',{weekday:'short'});
+    const dSub=pd(dt.getMonth()+1)+'.'+dt.getFullYear();
+    const isSun=dDay==='Sun';
+    const isSat=dDay==='Sat';
 
     return`
     <div class="day">
      <div class="dh">
-      <span>${lbl(x)}</span>
-      <span class="${n<0?'e':'i'}">
-       ${n<0?'−':'+'}${R0(Math.abs(n))}
-      </span>
+      <div class="dh-left">
+       <span class="dh-date">${dNum}</span>
+       <span class="dh-badge ${isSun?'sun':isSat?'sat':''}">${dDay}</span>
+       <span class="dh-sub">${dSub}</span>
+      </div>
+      <div class="dh-right">
+       ${dayInc>0?`<span class="i">${R0(dayInc)}</span>`:''}
+       ${dayExp>0?`<span class="e">${R0(dayExp)}</span>`:''}
+      </div>
      </div>
      ${q.map(row).join('')}
     </div>`;
@@ -1338,106 +1207,76 @@ function authSheet(){
  if(!getSB())
   return toast('Cloud is still loading, try again');
 
- if(user){
-  sheet(`
-   <div class="sh2">Account</div>
-
-   <div style="
-    background:var(--c2);
-    border-radius:16px;
-    padding:14px;
-    margin-bottom:12px
-   ">
-    <small style="color:var(--mu)">Signed in as</small>
-    <div style="font-weight:800;margin-top:4px">
-     ${esc(user.email)}
-    </div>
-   </div>
-
-   <button type="button"
-    class="ok"
-    style="background:var(--c2);color:var(--ink);margin-bottom:8px"
-    data-x="msync">
-    Sync Now
-   </button>
-
-   <button type="button"
-    class="ok"
-    style="background:var(--exp)"
-    data-x="logout">
-    Log Out
-   </button>
-  `);
- }else{
-  sheet(`
-   <div class="sh2">Sign In</div>
-
-   <p style="color:var(--mu);font-size:12.5px;margin-bottom:12px">
-    Sign in to sync your Wallet Manager data.
-   </p>
-
-   <input class="f" type="email" id="em"
-    placeholder="name@example.com" autofocus>
-
-   <input class="f" type="password" id="pw"
-    placeholder="Password">
-
-   <div style="display:flex;gap:8px;margin-top:6px">
-    <button type="button" class="ok"
-     data-auth="login" style="flex:1">
-     Log In
-    </button>
-
-    <button type="button" class="ok"
-     data-auth="signup"
-     style="flex:1;background:var(--c2);color:var(--ink)">
-     Sign Up
-    </button>
-   </div>
-  `);
+ if(!user){
+  $('#authGate').classList.add('on');
+  setAuthMode('login');
+  return;
  }
-}
 
-async function auth(type,em,pw){
- const c=getSB();
+ sheet(`
+  <div class="sh2">Account</div>
 
- if(!c)return toast('Cloud is still loading, try again');
- if(!em||!pw)return toast('Enter email & password');
+  <div style="
+   background:var(--c2);
+   border-radius:16px;
+   padding:14px;
+   margin-bottom:12px
+  ">
+   <small style="color:var(--mu)">Signed in as</small>
+   <div style="font-weight:800;margin-top:4px">
+    ${esc(user.email)}
+   </div>
+  </div>
 
- try{
-  const r=type==='login'?
-   await c.auth.signInWithPassword({
-    email:em,password:pw
-   }):
-   await c.auth.signUp({
-    email:em,password:pw
-   });
+  <button type="button"
+   class="ok"
+   style="background:var(--c2);color:var(--ink);margin-bottom:8px"
+   data-x="msync">
+   Sync Now
+  </button>
 
-  if(r.error)throw r.error;
-
-  closeSheet();
-
-  if(r.data.session){
-   user=r.data.user;
-   bootReady=true;
-   $('#authGate').classList.remove('on');
-   toast(type==='login'?'Logged in ✓':'Account created ✓');
-   await pull();
-   render();
-  }else{
-   toast('Account created. Check your email, then log in.');
-  }
-
- }catch(e){
-  toast(e.message||'Authentication error');
- }
+  <button type="button"
+   class="ok"
+   style="background:var(--exp)"
+   data-x="logout">
+   Log Out
+  </button>
+ `);
 }
 
 /* =========================
    PASSCODE
 ========================= */
 
-const hp=p=>btoa('wm_'+p+'_pin');
+const legacyHp=p=>btoa('wm_'+p+'_pin');
+
+async function hashPin(p){
+ const enc=new TextEncoder();
+ const data=enc.encode('wm_salt_2026_'+p+'_wallet');
+ const buf=await crypto.subtle.digest('SHA-256',data);
+ const arr=Array.from(new Uint8Array(buf));
+ return 'sha256:'+arr.map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function verifyPin(enteredPin,storedHash){
+ if(!storedHash||!enteredPin)return false;
+
+ if(storedHash.startsWith('sha256:')){
+  const h=await hashPin(enteredPin);
+  return h===storedHash;
+ }
+
+ if(legacyHp(enteredPin)===storedHash){
+  try{
+   const newHash=await hashPin(enteredPin);
+   PIN=newHash;
+   localStorage.setItem('gz_pin',newHash);
+  }catch(e){}
+  return true;
+ }
+
+ return false;
+}
 
 function pinSheet(){
  sheet(
@@ -1460,17 +1299,19 @@ function pinSheet(){
     required autofocus>
    <button class="ok">Enable Lock</button>
   `,
- fd=>{
+ async fd=>{
   const p=fd.get('p');
+  if(!p||p.length!==4)return toast('Enter a 4-digit PIN');
 
   if(PIN){
-   if(hp(p)!==PIN)return toast('Wrong PIN');
+   const ok=await verifyPin(p,PIN);
+   if(!ok)return toast('Wrong PIN');
 
    PIN='';
    localStorage.removeItem('gz_pin');
    toast('Passcode off');
   }else{
-   PIN=hp(p);
+   PIN=await hashPin(p);
    localStorage.setItem('gz_pin',PIN);
    toast('Passcode on 🔒');
   }
@@ -1488,69 +1329,24 @@ function csvEscape(v){
 }
 
 function makeBackupCSV(){
- const rows=[];
-
- rows.push([
-  'Wallet Manager Backup',
-  'Version',
-  '2'
- ]);
-
- rows.push([
-  'META',
-  'Exported At',
-  new Date().toISOString()
- ]);
-
- rows.push([
-  'KIND','ID','NAME','GROUP','OPEN',
-  'TYPE','EMOJI','DATE','TIME',
-  'CATEGORY','ACCOUNT','TO','AMOUNT','NOTE'
- ]);
+ const rows=[
+  ['Wallet Manager Backup','Version','2'],
+  ['META','Exported At',new Date().toISOString()],
+  ['KIND','ID','NAME','GROUP','OPEN','TYPE','EMOJI','DATE','TIME','CATEGORY','ACCOUNT','TO','AMOUNT','NOTE']
+ ];
 
  S.acc.forEach(a=>{
-  rows.push([
-   'ACCOUNT',
-   a.id,
-   a.name,
-   a.g,
-   a.open,
-   '','','','','','','','',''
-  ]);
+  rows.push(['ACCOUNT',a.id,a.name,a.g,a.open,'','','','','','','','','']);
  });
 
  Object.entries(S.cats).forEach(([type,list])=>{
   list.forEach(c=>{
-   rows.push([
-    'CATEGORY',
-    '',
-    c[0],
-    '',
-    '',
-    type,
-    c[1],
-    '','','','','','',''
-   ]);
+   rows.push(['CATEGORY','',c[0],'','',type,c[1],'','','','','','','']);
   });
  });
 
  sortT(S.tx).forEach(t=>{
-  rows.push([
-   'TRANSACTION',
-   t.id,
-   '',
-   '',
-   '',
-   t.type,
-   '',
-   t.date||'',
-   t.time||'',
-   t.cat||'',
-   t.acc||'',
-   t.to||'',
-   t.amt||0,
-   t.note||''
-  ]);
+  rows.push(['TRANSACTION',t.id,'','','',t.type,'',t.date||'',t.time||'',t.cat||'',t.acc||'',t.to||'',t.amt||0,t.note||'']);
  });
 
  return '\ufeff'+rows.map(r=>r.map(csvEscape).join(',')).join('\n');
@@ -1893,12 +1689,21 @@ async function xact(x,D){
 
  else if(x==='logout'){
 
-  if(await push()!==true)
-   return toast('Sync failed, so not logging out');
-
   const c=getSB();
 
-  if(c)await c.auth.signOut();
+  if(c&&user){
+   try{
+    await push();
+   }catch(err){
+    console.error('Final sync before logout skipped or failed:',err);
+   }
+
+   try{
+    await c.auth.signOut();
+   }catch(err){
+    console.error('Sign out error:',err);
+   }
+  }
 
   user=null;
   bootReady=false;
@@ -2020,7 +1825,7 @@ document.addEventListener('click',async e=>{
   [data-t],[data-o],[data-st],[data-per],
   [data-e],[data-ty],[data-a],[data-pc],
   [data-pa],[data-add],[data-x],[data-undo],
-  [data-ea],[data-auth],[data-k]
+  [data-ea],[data-k]
  `);
 
  if(!c)return;
@@ -2029,14 +1834,6 @@ document.addEventListener('click',async e=>{
 
  if(D.k!==undefined){
   key(D.k);
- }
-
- else if(D.auth){
-  auth(
-   D.auth,
-   (($('#em')||{}).value||'').trim(),
-   (($('#pw')||{}).value||'').trim()
-  );
  }
 
  else if(D.per){
@@ -2173,7 +1970,7 @@ $('#pad').innerHTML=[
  `<button data-lk="${k}">${k}</button>`
 ).join('');
 
-$('#pad').onclick=e=>{
+$('#pad').onclick=async e=>{
  const b=e.target.closest('[data-lk]');
  if(!b)return;
 
@@ -2185,8 +1982,10 @@ $('#pad').onclick=e=>{
  lockUI();
 
  if(en.length===4){
-  if(hp(en)===PIN){
+  const ok=await verifyPin(en,PIN);
+  if(ok){
    lk.classList.remove('on');
+   en='';
   }else{
    $('#lm').textContent='Wrong passcode, try again';
    en='';
@@ -2246,6 +2045,20 @@ $('#switchAuth').onclick=()=>{
  setAuthMode(authMode==='login'?'signup':'login');
 };
 
+function formatAuthError(msg){
+ if(!msg)return 'Authentication failed. Please try again.';
+ const m=msg.toLowerCase();
+ if(m.includes('invalid login credentials')||m.includes('invalid credentials'))
+  return 'Incorrect email or password. Please verify and try again.';
+ if(m.includes('user already registered'))
+  return 'An account with this email already exists. Please log in.';
+ if(m.includes('password should be at least'))
+  return 'Password must be at least 6 characters long.';
+ if(m.includes('network')||m.includes('fetch'))
+  return 'Network error. Please check your internet connection.';
+ return msg;
+}
+
 $('#gateBtn').onclick=async()=>{
  const em=$('#gateEmail').value.trim();
  const pw=$('#gatePassword').value.trim();
@@ -2260,7 +2073,7 @@ $('#gateBtn').onclick=async()=>{
  try{
   const c=getSB();
 
-  if(!c)throw new Error('Cloud is still loading');
+  if(!c)throw new Error('Cloud connection unavailable. Please check internet connection.');
 
   const r=authMode==='login'?
    await c.auth.signInWithPassword({
@@ -2291,7 +2104,8 @@ $('#gateBtn').onclick=async()=>{
   }
 
  }catch(e){
-  toast(e.message||'Authentication error');
+  console.error(e);
+  toast(formatAuthError(e.message));
  }finally{
   btn.disabled=false;
   btn.textContent=authMode==='login'?'Log In':'Sign Up';
@@ -2323,14 +2137,20 @@ async function startApp(){
  const c=getSB();
 
  if(!c){
-  setTimeout(startApp,500);
+  $('#splash').classList.add('hide');
+  $('#authGate').classList.add('on');
+  setAuthMode('login');
+  $('#authMsg').textContent=
+   'Offline mode: Cloud is currently unreachable. You can continue once connection is restored or sign in when online.';
   return;
  }
 
  try{
-  const{data}=await c.auth.getSession();
+  const{data,error}=await c.auth.getSession();
 
-  if(data&&data.session){
+  if(error)throw error;
+
+  if(data&&data.session&&data.session.user){
    user=data.session.user;
    bootReady=true;
 
@@ -2346,6 +2166,7 @@ async function startApp(){
    lock();
 
   }else{
+   user=null;
    bootReady=false;
 
    $('#splash').classList.add('hide');
@@ -2354,10 +2175,15 @@ async function startApp(){
    setAuthMode('login');
   }
 
-  c.auth.onAuthStateChange(async(_event,s)=>{
+  c.auth.onAuthStateChange(async(event,s)=>{
+   const prevUser=user;
    user=s?s.user:null;
 
-   if(user){
+   if(event==='SIGNED_OUT'||!user){
+    bootReady=false;
+    $('#authGate').classList.add('on');
+    setAuthMode('login');
+   }else if(user&&(!prevUser||prevUser.id!==user.id)){
     bootReady=true;
     $('#authGate').classList.remove('on');
     render();
@@ -2366,6 +2192,8 @@ async function startApp(){
 
  }catch(e){
   console.error(e);
+  user=null;
+  bootReady=false;
 
   $('#splash').classList.add('hide');
   $('#authGate').classList.add('on');
