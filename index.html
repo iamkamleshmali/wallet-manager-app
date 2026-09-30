@@ -88,7 +88,7 @@ function getSB(){
 
 // ---------- HELPERS ----------
 const $=q=>document.querySelector(q),uid=()=>Math.random().toString(36).slice(2,9);
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const R=n=>'₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}),R0=n=>'₹'+Math.round(n||0).toLocaleString('en-IN');
 const pd=n=>String(n).padStart(2,'0'),ym=d=>d.getFullYear()+'-'+pd(d.getMonth()+1),iso=d=>ym(d)+'-'+pd(d.getDate()),hm=d=>pd(d.getHours())+':'+pd(d.getMinutes());
 const DC={inc:[['Salary','💼'],['Pocket Money','💸'],['Freelance','💻'],['Scholarship','🎓'],['Gift','🎁'],['Other','💰']],exp:[['Food','🍜'],['Transport','🚌'],['Shopping','🛍️'],['Study','📚'],['Hostel / Rent','🏠'],['Recharge','📱'],['Fun','🎮'],['Health','💊'],['Social Life','👫'],['Other','✨']]};
@@ -165,4 +165,217 @@ function render(){
   }
 
   if(tab==='a'){
-    const bs=S.acc.
+    const bs=S.acc.map(bal),as=bs.filter(b=>b>0).reduce((s,b)=>s+b,0),li=-bs.filter(b=>b<0).reduce((s,b)=>s+b,0);
+    h=`<div class="top"><h1>Accounts</h1><button class="btn" data-x="new_acc">+ Add Account</button></div><div class="grid3"><div><small>Assets</small><b class="i">${R0(as)}</b></div><div><small>Liabilities</small><b class="e">${R0(li)}</b></div><div><small>Net Worth</small><b>${R0(as-li)}</b></div></div>`+
+    S.acc.map((a,i)=>`<button class="acc" data-ea="${a.id}"><div class="acl"><div class="aci">${a.g==='Cash'?'💵':a.g.includes('Card')?'💳':'🏦'}</div><div><b>${esc(a.name)}</b><small style="display:block">${esc(a.g)}</small></div></div><span class="num ${bs[i]<0?'e':'i'}">${R0(bs[i])}</span></button>`).join('');
+  }
+
+  if(tab==='m'){
+    h=`<div class="top"><h1>Settings & More</h1></div><div class="more">${[['auth','☁️','Cloud Account'],['pin','🔒','Passcode Lock'],['theme','🌓','Dark / Light'],['csv','📄','Export CSV'],['bk','💾','Backup / Restore'],['fresh','🧹','Reset Data'],['about','👛','About App']].map(([x,e,n])=>`<button class="mi" data-x="${x}"><div class="mic">${e}</div><span>${n}</span></button>`).join('')}</div><div class="foot"><b>Wallet Manager</b> · Smart Personal Money Tracker</div>`;
+  }
+  $('#v').innerHTML=h;
+}
+
+// ---------- ADD / EDIT ----------
+// safe calculator (no eval); ignores a trailing operator
+function ev(s){
+  const t=s.match(/\d*\.?\d+|[-+*\/]/g)||[];
+  while(t.length&&/^[-+*\/]$/.test(t[t.length-1]))t.pop();
+  if(!t.length)return 0;
+  const n=[+t[0]],o=[];
+  for(let i=1;i<t.length;i+=2){
+    const op=t[i],v=+t[i+1];
+    if(op==='*')n[n.length-1]*=v;
+    else if(op==='/')n[n.length-1]=v?n[n.length-1]/v:NaN;
+    else{o.push(op);n.push(v)}
+  }
+  return n.reduce((s,v,i)=>i?(o[i-1]==='+'?s+v:s-v):s);
+}
+const amt=()=>{const v=ev(ex);return isFinite(v)?Math.round(v*100)/100:0};
+const hasOp=()=>/[-+*\/]/.test(ex);
+const updDisp=()=>{const a=$('#da'),c=$('#cd');if(a)a.textContent=ex.replace(/\*/g,'×').replace(/\//g,'÷').replace(/-/g,'−')||'0';if(c)c.textContent=hasOp()?'= '+R(amt()):''};
+
+function openAdd(t){
+  const a=S.acc;ex=t?String(t.amt):'';
+  A=t?{...t,edit:1}:{type:'exp',cat:'',date:iso(new Date()),time:hm(new Date()),acc:a[0].id,to:'',note:''};
+  if(!A.to)A.to=(a[1]||a[0]).id;
+  $('#pg').classList.add('on');addR();
+}
+function addR(){
+  const tr=A.type==='trf',col=A.type==='inc'?'var(--inc)':tr?'var(--trf)':'var(--exp)';
+  $('#pg').innerHTML=`<div class="in"><div class="ph"><button data-a="close" aria-label="Back">←</button><h2>${{inc:'Add Income',exp:'Add Expense',trf:'Transfer'}[A.type]}</h2>${A.edit?'<button data-a="del" aria-label="Delete">🗑</button>':''}</div>
+  <div class="tp">${[['inc','Income'],['exp','Expense'],['trf','Transfer']].map(([k,n])=>`<button data-ty="${k}" style="${A.type===k?`border-color:var(--${k});color:var(--${k});background:var(--c2)`:''}">${n}</button>`).join('')}</div>
+  <div style="flex:1">
+  <div class="fl"><label>Date</label><div style="display:flex;gap:8px"><input type="date" id="ad" value="${A.date}"><input type="time" id="at" value="${A.time||''}"></div></div>
+  <div class="fl"><label>Amount</label><div class="amw" style="color:${col}">₹<span id="da"></span></div></div>
+  ${tr?'':`<button class="fl" data-a="cat"><label>Category</label><span>${A.cat?ce(A.type,A.cat)+' '+esc(A.cat):'<span style="color:var(--mu)">Select category ›</span>'}</span></button>`}
+  <button class="fl" data-a="acc"><label>${tr?'From':'Account'}</label><span>${esc(accN(A.acc))}</span></button>
+  ${tr?`<button class="fl" data-a="to"><label>To</label><span>${esc(accN(A.to))}</span></button>`:''}
+  <div class="fl"><label>Note</label><input id="an" maxlength="40" placeholder="Note (optional)" value="${esc(A.note||'')}"></div></div>
+  <div class="np"><div class="cd" id="cd"></div><div class="ng">${['7','8','9','⌫','4','5','6','/','1','2','3','*','.','0','-','+'].map(k=>`<button type="button" class="${/[-+*\/⌫]/.test(k)?'op':''}" data-k="${k}">${{'/':'÷','*':'×','-':'−'}[k]||k}</button>`).join('')}</div><button type="button" class="done" data-k="done" style="background:${col}">✓ Save</button></div></div>`;
+  updDisp();
+}
+function key(k){
+  if(k==='done'){
+    const v=amt();
+    if(!(v>0))return toast('Enter an amount');
+    if(A.type!=='trf'&&!A.cat)return pick('cat');
+    return saveTx(v);
+  }
+  const last=ex.split(/[-+*\/]/).pop();
+  if(k==='⌫')ex=ex.slice(0,-1);
+  else if(/^[-+*\/]$/.test(k)){if(!ex)return;ex=/[-+*\/]$/.test(ex)?ex.slice(0,-1)+k:ex+k}
+  else if(k==='.'){if(last.includes('.'))return;ex+=last?'.':'0.'}
+  else{if(last.includes('.')&&last.split('.')[1].length>=2)return;if(last.length>=8)return;ex=(last==='0'?ex.slice(0,-1):ex)+k}
+  updDisp();
+}
+function saveTx(n){
+  if(A.type==='trf'&&A.acc===A.to)return toast('Select two different accounts');
+  const r={id:A.id||uid(),type:A.type,cat:A.type==='trf'?'':A.cat,amt:n,note:(A.note||'').trim(),acc:A.acc,to:A.type==='trf'?A.to:'',date:A.date||iso(new Date()),time:A.time||''};
+  S.tx=S.tx.filter(x=>x.id!==r.id).concat(r);save();$('#pg').classList.remove('on');render();toast('Saved ✓');
+}
+
+// ---------- SHEETS ----------
+function sheet(html,fn){
+  const o=$('#ov');o.innerHTML=`<form class="box">${html}</form>`;o.classList.add('on');
+  o.querySelector('form').onsubmit=e=>{e.preventDefault();fn&&fn(new FormData(e.target))};
+  const i=o.querySelector('[autofocus]');i&&setTimeout(()=>i.focus(),70);
+}
+const closeSheet=()=>$('#ov').classList.remove('on');
+
+function pick(kind){
+  if(kind==='cat'){
+    const l=S.cats[A.type]||[];
+    sheet(`<div class="sh2">Select Category</div><div class="cg">${l.map(c=>`<button type="button" data-pc="${esc(c[0])}"><span>${c[1]}</span>${esc(c[0])}</button>`).join('')}</div><label class="lb">New category</label><div style="display:flex;gap:8px"><input class="f" name="e" placeholder="🏷️" maxlength="4" style="width:65px"><input class="f" name="n" placeholder="Name" maxlength="18" required></div><button class="ok">Add & Use</button>`,fd=>{
+      const n=fd.get('n').trim();if(!n)return;
+      S.cats[A.type].push([n,fd.get('e').trim()||'🏷️']);A.cat=n;save();closeSheet();addR();
+    });
+  }else sheet(`<div class="sh2">${kind==='to'?'Transfer To':'Account'}</div>${S.acc.map(a=>`<button type="button" class="lr" data-pa="${kind}:${a.id}"><span>${esc(a.name)}</span><b class="num" style="color:var(--mu)">${R0(bal(a))}</b></button>`).join('')}`);
+}
+
+function accSheet(id){
+  const a=S.acc.find(x=>x.id===id)||{name:'',g:'Cash',open:''};
+  sheet(`<div class="sh2">${id?'Edit Account':'New Account'}</div><label class="lb">Account name</label><input class="f" name="n" required maxlength="30" placeholder="e.g. Cash, UPI, Bank" value="${esc(a.name)}" autofocus><label class="lb">Group</label><select class="f" name="g">${GR.map(g=>`<option ${g===a.g?'selected':''}>${g}</option>`).join('')}</select><label class="lb">Starting balance (₹)</label><input class="f" name="o" type="number" step="0.01" placeholder="0.00" value="${a.open}"><button class="ok">Save Account</button>${id?`<button type="button" class="ok" data-x="delacc" data-id="${id}" style="background:var(--exp);margin-top:8px">Delete Account</button>`:''}`,fd=>{
+    const v={name:fd.get('n').trim(),g:fd.get('g'),open:parseFloat(fd.get('o'))||0};
+    if(id)Object.assign(a,v);else S.acc.push({id:uid(),...v});
+    save();closeSheet();render();
+  });
+}
+
+function authSheet(){
+  if(!getSB())return toast('Cloud is still loading, try again in a moment');
+  if(user)sheet(`<div class="sh2">Cloud Account</div><p style="color:var(--mu);margin-bottom:12px">Logged in as:<br><b style="color:var(--ink)">${esc(user.email)}</b></p><button type="button" class="ok" style="background:var(--c2);color:var(--ink);margin-bottom:8px" data-x="msync">Sync Now</button><button type="button" class="ok" style="background:var(--exp)" data-x="logout">Log Out</button>`);
+  else sheet(`<div class="sh2">Sign In or Sign Up</div><p style="color:var(--mu);font-size:12.5px;margin-bottom:12px">Use your data on any phone or computer.</p><input class="f" type="email" id="em" placeholder="name@example.com" autofocus><input class="f" type="password" id="pw" placeholder="Password (min 6 characters)"><div style="display:flex;gap:8px;margin-top:6px"><button type="button" class="ok" data-auth="login" style="flex:1">Log In</button><button type="button" class="ok" data-auth="signup" style="flex:1;background:var(--c2);color:var(--ink)">Sign Up</button></div>`);
+}
+async function auth(type,em,pw){
+  const c=getSB();if(!c)return toast('Cloud is still loading, try again');
+  if(!em||!pw)return toast('Enter email & password');
+  try{
+    const r=type==='login'?await c.auth.signInWithPassword({email:em,password:pw}):await c.auth.signUp({email:em,password:pw});
+    if(r.error)throw r.error;
+    closeSheet();
+    if(r.data.session){user=r.data.user;toast(type==='login'?'Logged in ✓':'Account created ✓');await pull()}
+    else toast('Account created. Now tap Log In.');
+    render();
+  }catch(e){toast(e.message||'Login error')}
+}
+
+const hp=p=>btoa('wm_'+p+'_pin');
+function pinSheet(){
+  sheet(PIN?`<div class="sh2">Passcode Lock</div><input class="f" name="p" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="Current 4-digit PIN" required autofocus><button class="ok">Turn Passcode Off</button>`:`<div class="sh2">Set 4-Digit Passcode</div><input class="f" name="p" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="New 4-digit PIN" required autofocus><button class="ok">Enable Lock</button>`,fd=>{
+    const p=fd.get('p');
+    if(PIN){if(hp(p)!==PIN)return toast('Wrong PIN');PIN='';localStorage.removeItem('gz_pin');toast('Passcode off')}
+    else{PIN=hp(p);localStorage.setItem('gz_pin',PIN);toast('Passcode on 🔒')}
+    closeSheet();
+  });
+}
+
+function dl(name,text,type){const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click()}
+function csv(){
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=[['Date','Time','Type','Category','Account','To','Amount','Note'],...sortT(S.tx).map(t=>[t.date,t.time,t.type,t.cat,accN(t.acc),t.to?accN(t.to):'',t.amt,t.note])];
+  dl('Wallet_'+iso(new Date())+'.csv','\ufeff'+rows.map(r=>r.map(q).join(',')).join('\n'),'text/csv');toast('CSV downloaded');
+}
+function bkSheet(){
+  sheet(`<div class="sh2">Backup / Restore</div><button type="button" class="ok" data-x="bkdl" style="margin-bottom:12px">Download Backup File</button><label class="lb">Restore from a backup file</label><input class="f" type="file" id="bkf" accept=".json,application/json">`);
+  $('#bkf').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(!(j.acc&&j.tx))throw 0;S=clean(j);save();closeSheet();render();toast('Backup restored ✓')}catch(z){toast('Invalid backup file')}};
+}
+
+async function xact(x,D){
+  if(x==='auth')authSheet();
+  else if(x==='new_acc')accSheet();
+  else if(x==='delacc'){
+    const id=D.id;
+    if(S.acc.length<2)return toast('Keep at least one account');
+    if(S.tx.some(t=>t.acc===id||t.to===id))return toast('This account has records. Delete them first');
+    S.acc=S.acc.filter(a=>a.id!==id);save();closeSheet();render();
+  }
+  else if(x==='msync'){if(await push())await pull();closeSheet()}
+  else if(x==='logout'){
+    if(await push()!==true)return toast('Sync failed, so not logging out (your data stays safe)');
+    const c=getSB();if(c)await c.auth.signOut();
+    user=null;S=seed();localStorage.removeItem('gz2');localStorage.removeItem('gz_mod');closeSheet();render();toast('Logged out');
+  }
+  else if(x==='pin')pinSheet();
+  else if(x==='theme'){const r=document.documentElement,l=r.dataset.theme==='light'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:light)').matches);r.dataset.theme=l?'dark':'light';localStorage.setItem('gz_theme',r.dataset.theme)}
+  else if(x==='csv')csv();
+  else if(x==='bk')bkSheet();
+  else if(x==='bkdl'){dl('Wallet_Backup_'+iso(new Date())+'.json',JSON.stringify(S,null,2),'application/json');toast('Backup downloaded')}
+  else if(x==='about')sheet(`<div class="sh2">About Wallet Manager</div><p style="color:var(--mu);font-size:13px;line-height:1.6;margin-bottom:14px">Simple personal money tracker. Your data is saved on this device, and synced to your cloud account when you log in.</p><button type="button" class="ok" data-x="closesheet">Close</button>`);
+  else if(x==='closesheet')closeSheet();
+  else if(x==='fresh'){
+    if(fresh){S.tx=[];S.acc.forEach(a=>a.open=0);save();fresh=0;render();toast('All cleared')}
+    else{fresh=1;toast('Tap Reset Data again to confirm');setTimeout(()=>fresh=0,4000)}
+  }
+}
+
+// ---------- EVENTS ----------
+document.addEventListener('click',async e=>{
+  if(e.target===$('#ov'))return closeSheet();
+  const c=e.target.closest('[data-t],[data-o],[data-st],[data-per],[data-e],[data-ty],[data-a],[data-pc],[data-pa],[data-add],[data-x],[data-undo],[data-ea],[data-auth],[data-k]');
+  if(!c)return;const D=c.dataset;
+  if(D.k!==undefined)key(D.k);
+  else if(D.auth)auth(D.auth,(($('#em')||{}).value||'').trim(),(($('#pw')||{}).value||'').trim());
+  else if(D.per){per=D.per;render()}
+  else if(D.t){tab=D.t;render();scrollTo(0,0)}
+  else if(D.o){off=Math.min(0,off+ +D.o);render()}
+  else if(D.st){st=D.st;render()}
+  else if(D.add!==undefined)openAdd();
+  else if(D.e)openAdd(S.tx.find(t=>t.id===D.e));
+  else if(D.ty){A.type=D.ty;if(!(S.cats[D.ty]||[]).find(x=>x[0]===A.cat))A.cat='';addR()}
+  else if(D.a==='close')$('#pg').classList.remove('on');
+  else if(D.a==='cat'||D.a==='acc'||D.a==='to')pick(D.a);
+  else if(D.a==='del'){const t=S.tx.find(x=>x.id===A.id);S.tx=S.tx.filter(x=>x.id!==A.id);save();$('#pg').classList.remove('on');render();toast('Deleted',()=>{S.tx.push(t);save();render()})}
+  else if(D.pc){A.cat=D.pc;closeSheet();addR()}
+  else if(D.pa){const[k,id]=D.pa.split(':');if(k==='to')A.to=id;else A.acc=id;closeSheet();addR()}
+  else if(D.undo){undo&&undo();$('#tt').style.display='none'}
+  else if(D.ea)accSheet(D.ea);
+  else if(D.x)await xact(D.x,D);
+});
+document.addEventListener('input',e=>{if(!A)return;const i=e.target.id;if(i==='an')A.note=e.target.value;if(i==='ad')A.date=e.target.value;if(i==='at')A.time=e.target.value});
+document.onkeydown=e=>{if(e.key==='Escape'){closeSheet();$('#pg').classList.remove('on')}};
+
+// ---------- PASSCODE LOCK ----------
+let en='';const lk=$('#lk'),lockUI=()=>$('#dots').innerHTML=[0,1,2,3].map(i=>`<i class="${i<en.length?'f1':''}"></i>`).join('');
+$('#pad').innerHTML=[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k=>k===''?'<span></span>':`<button data-lk="${k}">${k}</button>`).join('');
+$('#pad').onclick=e=>{
+  const b=e.target.closest('[data-lk]');if(!b)return;const k=b.dataset.lk;
+  if(k==='⌫')en=en.slice(0,-1);else if(en.length<4)en+=k;
+  lockUI();
+  if(en.length===4){if(hp(en)===PIN)lk.classList.remove('on');else $('#lm').textContent='Wrong passcode, try again';en='';setTimeout(lockUI,150)}
+};
+const lock=()=>{if(PIN){en='';$('#lm').textContent='Enter passcode';lockUI();lk.classList.add('on')}};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)lock()});
+
+// ---------- START ----------
+const th=localStorage.getItem('gz_theme');if(th)document.documentElement.dataset.theme=th;
+lock();render();
+function session(){
+  const c=getSB();if(!c)return setTimeout(session,500);
+  c.auth.getSession().then(({data})=>{if(data&&data.session){user=data.session.user;render();pull()}}).catch(console.warn);
+  c.auth.onAuthStateChange((_e,s)=>{user=s?s.user:null;render()});
+}
+session();
+</script>
+</body>
+</html>
