@@ -129,16 +129,38 @@ main{max-width:480px;margin:auto;padding:14px 14px 110px}
 .fl input{background:none;border:0;color:var(--ink);padding:0}
 .fl input:focus{outline:0}
 .amw{font:700 20px Sora;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.np{background:var(--c1);border-radius:22px 22px 0 0;padding:12px 12px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--ln);margin-top:auto}
-.ng{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.ng button{padding:14px 0;background:var(--c2);border-radius:14px;font:700 20px Sora;text-align:center;color:var(--ink);border:1px solid transparent}
-.ng button:active{transform:scale(.96);background:var(--c3)}
-.ng .sym{font-size:22px}
-.np-actions{display:grid;grid-template-columns:1fr 1.6fr;gap:8px}
-.np-btn{padding:14px;border-radius:14px;font:700 15px 'Plus Jakarta Sans',sans-serif;text-align:center;border:none;cursor:pointer}
-.np-btn:active{transform:scale(.96)}
-.np-clear{background:var(--c2);color:var(--mu);border:1px solid var(--ln)}
-.np-done{font-weight:800;color:#fff}
+
+/* NORMAL AMOUNT-ENTRY KEYPAD */
+.np{background:var(--c1);border-radius:20px 20px 0 0;padding:0 0 calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--ln);margin-top:auto}
+.np-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--c2);border-radius:20px 20px 0 0;border-bottom:1px solid var(--ln);color:var(--mu)}
+.np-bar-title{font-size:13px;font-weight:700;color:var(--mu)}
+.np-bar-tools{display:flex;align-items:center;gap:12px}
+.np-tool-btn{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--mu);cursor:pointer;border:none}
+.np-tool-btn:active{color:var(--ink);background:var(--c3)}
+.np-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--ln);border-bottom:1px solid var(--ln)}
+.np-k{padding:16px 0;background:var(--c1);font:700 20px Sora;text-align:center;color:var(--ink);display:grid;place-items:center;cursor:pointer;border:none;min-height:56px}
+.np-k:active{background:var(--c2)}
+.np-k.op{background:var(--c1);color:var(--mu);font-size:20px}
+.np-k.op:active{background:var(--c2);color:var(--ink)}
+.np-k.done{background:#ff5252;color:#fff;font:800 15px 'Plus Jakarta Sans',sans-serif;letter-spacing:.3px}
+.np-k.done:active{opacity:.92}
+
+/* SEPARATE CALCULATOR SCREEN */
+.calc-screen{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column;overflow:hidden}
+.calc-screen.on{display:flex}
+.calc-top{padding:14px 16px;display:flex;justify-content:flex-end}
+.calc-close{width:36px;height:36px;border-radius:10px;background:var(--c1);border:1px solid var(--ln);display:grid;place-items:center;color:var(--mu);cursor:pointer}
+.calc-close:active{color:var(--ink);background:var(--c2)}
+.calc-disp-area{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;padding:20px 24px;text-align:right}
+.calc-expr{font:600 16px Sora;color:var(--mu);min-height:22px;word-break:break-all}
+.calc-main-num{font:700 48px Sora;color:var(--ink);line-height:1.1;word-break:break-all}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--ln);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px)}
+.calc-k{padding:18px 0;background:var(--c1);font:700 20px Sora;text-align:center;color:var(--ink);display:grid;place-items:center;cursor:pointer;border:none;min-height:62px}
+.calc-k:active{background:var(--c2)}
+.calc-k.op{background:var(--c1);color:var(--mu);font-size:20px}
+.calc-k.op:active{background:var(--c2);color:var(--ink)}
+.calc-k.done{background:#ff5252;color:#fff;font:800 15px 'Plus Jakarta Sans',sans-serif;letter-spacing:.3px}
+.calc-k.done:active{opacity:.92}
 
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:flex-end;justify-content:center;z-index:35}
 .ov.on{display:flex}
@@ -220,6 +242,7 @@ textarea.f{min-height:120px;resize:vertical}
 <main id="v"></main>
 <nav class="nav" id="nav"></nav>
 <div class="pg" id="pg"></div>
+<div class="calc-screen" id="calcModal"></div>
 <div class="ov" id="ov"></div>
 <div id="tt"></div>
 
@@ -279,7 +302,11 @@ const ICONS={
  bank:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="21" y2="21"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="5 6 12 3 19 6"/><line x1="4" y1="10" x2="4" y2="21"/><line x1="20" y1="10" x2="20" y2="21"/><line x1="8" y1="10" x2="8" y2="21"/><line x1="12" y1="10" x2="12" y2="21"/><line x1="16" y1="10" x2="16" y2="21"/></svg>',
  trash:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
  transfer:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 5h18"/><polyline points="7 23 3 19 7 15"/><path d="M21 19H3"/></svg>',
- plus:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+ plus:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+ backspace:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>',
+ calc:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>',
+ globe:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+ x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
 };
 
 const svgIcon=(name)=>ICONS[name]||'';
@@ -916,6 +943,134 @@ const updDisp=()=>{
  if(a)a.textContent=ex.replace(/-/g,'−')||'0';
 };
 
+/* Dedicated Calculator State & Methods */
+let calcExpr='';
+let calcPrevOp='';
+
+function openCalculator(){
+ calcExpr=ex||'0';
+ renderCalculator();
+ $('#calcModal').classList.add('on');
+}
+
+function closeCalculator(){
+ $('#calcModal').classList.remove('on');
+}
+
+function renderCalculator(){
+ const m=$('#calcModal');
+ if(!m)return;
+
+ // Display value: current active operand or evaluated value
+ let mainVal='0';
+ try{
+  const v=ev(calcExpr);
+  mainVal=isFinite(v)?String(Math.round(v*10000)/10000):'0';
+ }catch(e){
+  mainVal='0';
+ }
+
+ m.innerHTML=`
+ <div class="calc-top">
+  <button type="button" class="calc-close" data-ck="close" aria-label="Close calculator">
+   ${svgIcon('x')}
+  </button>
+ </div>
+
+ <div class="calc-disp-area">
+  <div class="calc-expr" id="calcExprDisp">${calcExpr.replace(/\*/g,'×').replace(/\//g,'÷').replace(/-/g,'−')}</div>
+  <div class="calc-main-num" id="calcMainDisp">${mainVal.replace(/-/g,'−')}</div>
+ </div>
+
+ <div class="calc-grid">
+  <button type="button" class="calc-k op" data-ck="ac">AC</button>
+  <button type="button" class="calc-k op" data-ck="/">÷</button>
+  <button type="button" class="calc-k op" data-ck="*">×</button>
+  <button type="button" class="calc-k op" data-ck="⌫">${svgIcon('backspace')}</button>
+
+  <button type="button" class="calc-k" data-ck="7">7</button>
+  <button type="button" class="calc-k" data-ck="8">8</button>
+  <button type="button" class="calc-k" data-ck="9">9</button>
+  <button type="button" class="calc-k op" data-ck="-">−</button>
+
+  <button type="button" class="calc-k" data-ck="4">4</button>
+  <button type="button" class="calc-k" data-ck="5">5</button>
+  <button type="button" class="calc-k" data-ck="6">6</button>
+  <button type="button" class="calc-k op" data-ck="+">+</button>
+
+  <button type="button" class="calc-k" data-ck="1">1</button>
+  <button type="button" class="calc-k" data-ck="2">2</button>
+  <button type="button" class="calc-k" data-ck="3">3</button>
+  <button type="button" class="calc-k op" data-ck="=">=</button>
+
+  <button type="button" class="calc-k" data-ck="00">00</button>
+  <button type="button" class="calc-k" data-ck="0">0</button>
+  <button type="button" class="calc-k" data-ck=".">.</button>
+  <button type="button" class="calc-k done" data-ck="done">DONE</button>
+ </div>`;
+}
+
+function calcKey(k){
+ if(k==='close'){
+  closeCalculator();
+  return;
+ }
+
+ if(k==='done'){
+  const v=ev(calcExpr);
+  const finalAmt=isFinite(v)?Math.round(v*100)/100:0;
+  ex=finalAmt?String(finalAmt):'';
+  updDisp();
+  closeCalculator();
+  return;
+ }
+
+ if(k==='ac'){
+  calcExpr='0';
+  renderCalculator();
+  return;
+ }
+
+ if(k==='⌫'){
+  calcExpr=calcExpr.length>1?calcExpr.slice(0,-1):'0';
+  renderCalculator();
+  return;
+ }
+
+ if(k==='='){
+  const v=ev(calcExpr);
+  calcExpr=isFinite(v)?String(Math.round(v*10000)/10000):'0';
+  renderCalculator();
+  return;
+ }
+
+ if(/^[-+*\/]$/.test(k)){
+  if(!calcExpr)calcExpr='0';
+  if(/[-+*\/]$/.test(calcExpr)){
+   calcExpr=calcExpr.slice(0,-1)+k;
+  }else{
+   calcExpr+=k;
+  }
+  renderCalculator();
+  return;
+ }
+
+ if(k==='.'){
+  const lastChunk=calcExpr.split(/[-+*\/]/).pop()||'';
+  if(lastChunk.includes('.'))return;
+  calcExpr+=(lastChunk?'.':'0.');
+  renderCalculator();
+  return;
+ }
+
+ // Numbers & 00
+ if(calcExpr==='0'&&k!=='00')calcExpr=k;
+ else if(calcExpr==='0'&&k==='00')calcExpr='0';
+ else calcExpr+=k;
+
+ renderCalculator();
+}
+
 function openAdd(t){
  const a=S.acc;
 
@@ -1015,35 +1170,37 @@ function addR(){
 
   </div>
 
+  <!-- NORMAL AMOUNT-ENTRY KEYBOARD -->
   <div class="np">
-   <div class="ng">
-    ${[
-     '1','2','3',
-     '4','5','6',
-     '7','8','9',
-     '0','.','-'
-    ].map(k=>`
-     <button type="button"
-      class="${k==='.'||k==='-'?'sym':''}"
-      data-k="${k}">
-      ${k==='-'?'−':k}
+   <div class="np-bar">
+    <span class="np-bar-title">Amount</span>
+    <div class="np-bar-tools">
+     <button type="button" class="np-tool-btn" data-k="clear" aria-label="Clear">
+      ${svgIcon('x')}
      </button>
-    `).join('')}
+    </div>
    </div>
 
-   <div class="np-actions">
-    <button type="button"
-     class="np-btn np-clear"
-     data-k="clear">
-     Clear
-    </button>
+   <div class="np-grid">
+    <button type="button" class="np-k" data-k="1">1</button>
+    <button type="button" class="np-k" data-k="2">2</button>
+    <button type="button" class="np-k" data-k="3">3</button>
+    <button type="button" class="np-k op" data-k="⌫" aria-label="Backspace">${svgIcon('backspace')}</button>
 
-    <button type="button"
-     class="np-btn np-done"
-     data-k="done"
-     style="background:${col}">
-     Done
-    </button>
+    <button type="button" class="np-k" data-k="4">4</button>
+    <button type="button" class="np-k" data-k="5">5</button>
+    <button type="button" class="np-k" data-k="6">6</button>
+    <button type="button" class="np-k op" data-k="-">−</button>
+
+    <button type="button" class="np-k" data-k="7">7</button>
+    <button type="button" class="np-k" data-k="8">8</button>
+    <button type="button" class="np-k" data-k="9">9</button>
+    <button type="button" class="np-k op" data-k="calc" aria-label="Calculator">${svgIcon('calc')}</button>
+
+    <button type="button" class="np-k" data-k="" style="visibility:hidden"></button>
+    <button type="button" class="np-k" data-k="0">0</button>
+    <button type="button" class="np-k" data-k=".">.</button>
+    <button type="button" class="np-k done" data-k="done">Done</button>
    </div>
   </div>
  </div>`;
@@ -1052,6 +1209,8 @@ function addR(){
 }
 
 function key(k){
+ if(!k)return;
+
  if(k==='done'){
   const v=amt();
 
@@ -1060,6 +1219,11 @@ function key(k){
   if(A.type!=='trf'&&!A.cat)return pick('cat');
 
   return saveTx(v);
+ }
+
+ if(k==='calc'){
+  openCalculator();
+  return;
  }
 
  if(k==='clear'){
@@ -1880,14 +2044,18 @@ document.addEventListener('click',async e=>{
   [data-t],[data-o],[data-st],[data-per],
   [data-e],[data-ty],[data-a],[data-pc],
   [data-pa],[data-add],[data-x],[data-undo],
-  [data-ea],[data-k]
+  [data-ea],[data-k],[data-ck]
  `);
 
  if(!c)return;
 
  const D=c.dataset;
 
- if(D.k!==undefined){
+ if(D.ck!==undefined){
+  calcKey(D.ck);
+ }
+
+ else if(D.k!==undefined){
   key(D.k);
  }
 
