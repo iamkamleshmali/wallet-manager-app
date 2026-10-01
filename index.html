@@ -235,6 +235,25 @@ textarea.f{min-height:120px;resize:vertical}
 .authMsg{color:var(--mu);font-size:11.5px;text-align:center;margin-top:14px;line-height:1.5;max-width:340px}
 
 @keyframes authEntrance{0%{opacity:0;transform:scale(.97) translateY(12px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+
+/* UPDATE MODAL */
+.update-ov{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:95;padding:16px}
+.update-ov.on{display:flex}
+.update-card{width:100%;max-width:380px;background:var(--c1);border:1px solid var(--ln);border-radius:24px;padding:24px 20px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5);animation:upEntrance .3s cubic-bezier(.16,1,.3,1)}
+.up-icon-wrap{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--inc),#7357ff);display:grid;place-items:center;color:#fff;margin-bottom:16px;box-shadow:0 12px 30px rgba(41,121,255,.35);position:relative}
+.up-title{font:800 20px Sora;margin-bottom:6px;color:var(--ink)}
+.up-version-row{display:inline-flex;align-items:center;gap:8px;background:var(--c2);border:1px solid var(--ln);border-radius:99px;padding:4px 12px;margin-bottom:14px}
+.up-version-tag{font:700 12px Sora;color:var(--mu)}
+.up-version-tag.new{color:var(--inc)}
+.up-arrow{font-size:12px;color:var(--mu)}
+.up-desc{font-size:13px;line-height:1.55;color:var(--mu);margin-bottom:16px;max-width:320px}
+.up-notes{background:var(--bg);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;font-size:12px;color:var(--mu);text-align:left;max-height:120px;overflow-y:auto;width:100%;box-sizing:border-box;margin-bottom:16px;line-height:1.5;white-space:pre-line}
+.up-actions{width:100%;display:flex;flex-direction:column;gap:8px}
+.up-btn-primary{width:100%;padding:13px;border-radius:14px;font-weight:800;font-size:14px;background:linear-gradient(135deg,var(--inc),#7357ff);color:#fff;text-align:center;box-shadow:0 6px 20px rgba(41,121,255,.3);cursor:pointer;border:0;transition:transform .15s,opacity .15s}
+.up-btn-primary:active{transform:scale(.98)}
+.up-btn-secondary{width:100%;padding:11px;border-radius:14px;font-weight:700;font-size:13px;background:transparent;color:var(--mu);text-align:center;cursor:pointer;border:0;transition:background .15s,color .15s}
+.up-btn-secondary:active{background:var(--c2);color:var(--ink)}
+@keyframes upEntrance{0%{opacity:0;transform:scale(.92) translateY(14px)}100%{opacity:1;transform:scale(1) translateY(0)}}
 </style>
 </head>
 
@@ -292,6 +311,30 @@ textarea.f{min-height:120px;resize:vertical}
 <div class="ov" id="ov"></div>
 <div id="tt"></div>
 
+<div class="update-ov" id="updateModal" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
+  <div class="update-card">
+    <div class="up-icon-wrap">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+    </div>
+    <div class="up-title" id="updateTitle">Update Available</div>
+    <div class="up-version-row">
+      <span class="up-version-tag" id="upCurrVer">v1.0.0</span>
+      <span class="up-arrow">➔</span>
+      <span class="up-version-tag new" id="upNewVer">v1.0.0</span>
+    </div>
+    <div class="up-desc" id="upDesc">A newer version of Wallet Manager is ready to install with latest updates and fixes.</div>
+    <div class="up-notes" id="upNotes" style="display:none"></div>
+    <div class="up-actions">
+      <button type="button" class="up-btn-primary" id="btnUpdateConfirm">Update Now</button>
+      <button type="button" class="up-btn-secondary" id="btnUpdateDismiss">Later</button>
+    </div>
+  </div>
+</div>
+
 <div id="lk">
   <div style="width:52px;height:52px;border-radius:18px;background:var(--c1);border:1px solid var(--ln);display:grid;place-items:center;color:var(--ink)">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -303,6 +346,141 @@ textarea.f{min-height:120px;resize:vertical}
 </div>
 
 <script>
+/* =========================
+   VERSION & UPDATES
+========================= */
+const APP_VERSION = 'v1.0.0';
+const GITHUB_RELEASES_URL = 'https://api.github.com/repos/iamkamleshmali/wallet-manager-km/releases/latest';
+
+function isNewerVersion(remote, current){
+  if(!remote || !current) return false;
+  const p = v => String(v).replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
+  const r = p(remote), c = p(current);
+  const len = Math.max(r.length, c.length);
+  for(let i = 0; i < len; i++){
+    const rv = r[i] || 0, cv = c[i] || 0;
+    if(rv > cv) return true;
+    if(rv < cv) return false;
+  }
+  return false;
+}
+
+function openDownloadUrl(url){
+  if(!url) return;
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 100);
+  } catch(e) {
+    try {
+      window.open(url, '_blank');
+    } catch(err) {
+      window.location.href = url;
+    }
+  }
+}
+
+function closeUpdateModal(){
+  const m = $('#updateModal');
+  if(m) m.classList.remove('on');
+}
+
+async function showUpdateModal(info){
+  try {
+    const splash = $('#splash');
+    if(splash && !splash.classList.contains('hide')){
+      await new Promise(r => setTimeout(r, 1400));
+    }
+    const m = $('#updateModal');
+    if(!m) return;
+    const curr = $('#upCurrVer');
+    const next = $('#upNewVer');
+    const desc = $('#upDesc');
+    const notes = $('#upNotes');
+    const btnConfirm = $('#btnUpdateConfirm');
+    const btnDismiss = $('#btnUpdateDismiss');
+
+    if(curr) curr.textContent = info.currentVersion || APP_VERSION;
+    if(next) next.textContent = info.latestVersion;
+    if(desc && info.name) desc.textContent = `A newer release (${info.latestVersion}) is available. Update now to enjoy the latest features and bug fixes.`;
+
+    if(notes){
+      if(info.notes && info.notes.trim()){
+        notes.textContent = info.notes.trim();
+        notes.style.display = 'block';
+      } else {
+        notes.style.display = 'none';
+      }
+    }
+
+    if(btnConfirm){
+      btnConfirm.onclick = () => {
+        openDownloadUrl(info.downloadUrl);
+        closeUpdateModal();
+        toast('Starting update download...');
+      };
+    }
+    if(btnDismiss){
+      btnDismiss.onclick = () => closeUpdateModal();
+    }
+    m.onclick = e => {
+      if(e.target === m) closeUpdateModal();
+    };
+
+    m.classList.add('on');
+  } catch(e) {
+    console.warn('Unable to display update modal:', e);
+  }
+}
+
+async function checkForUpdates(manual = false){
+  try {
+    if(manual) toast('Checking for updates...');
+    const res = await fetch(GITHUB_RELEASES_URL, {
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if(!res.ok){
+      if(manual) toast('No updates available');
+      return;
+    }
+    const release = await res.json();
+    if(!release || !release.tag_name){
+      if(manual) toast('No updates available');
+      return;
+    }
+
+    if(isNewerVersion(release.tag_name, APP_VERSION)){
+      let downloadUrl = '';
+      if(Array.isArray(release.assets)){
+        const apk = release.assets.find(a => a.name && a.name.toLowerCase().endsWith('.apk'));
+        if(apk && apk.browser_download_url){
+          downloadUrl = apk.browser_download_url;
+        }
+      }
+      if(!downloadUrl && release.html_url){
+        downloadUrl = release.html_url;
+      }
+      await showUpdateModal({
+        currentVersion: APP_VERSION,
+        latestVersion: release.tag_name,
+        name: release.name || release.tag_name,
+        notes: release.body || '',
+        downloadUrl: downloadUrl
+      });
+    } else {
+      if(manual) toast(`Wallet Manager is up to date (${APP_VERSION})`);
+    }
+  } catch(err) {
+    // Fail silently without blocking app during offline mode or network errors
+    console.warn('Update check failed (silent):', err);
+    if(manual) toast('Unable to check for updates right now');
+  }
+}
+
 /* =========================
    SUPABASE
 ========================= */
@@ -352,7 +530,8 @@ const ICONS={
  backspace:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>',
  calc:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>',
  globe:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
- x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+ x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+ update:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
 };
 
 const svgIcon=(name)=>ICONS[name]||'';
@@ -930,6 +1109,11 @@ function render(){
      <button class="mi" data-x="fresh">
       <div class="mic" style="color:var(--exp)">${svgIcon('reset')}</div>
       <span>Reset Data</span>
+     </button>
+
+     <button class="mi" data-x="checkupdate">
+      <div class="mic">${svgIcon('update')}</div>
+      <span>Check for Updates</span>
      </button>
 
      <button class="mi" data-x="about">
@@ -2018,6 +2202,10 @@ async function xact(x,D){
   feedbackSheet();
  }
 
+ else if(x==='checkupdate'){
+  checkForUpdates(true);
+ }
+
  else if(x==='about'){
   sheet(`
    <div class="sh2">About Wallet Manager</div>
@@ -2044,9 +2232,17 @@ async function xact(x,D){
     text-align:center;
     margin-bottom:12px
    ">
+    Version ${APP_VERSION}<br>
     © 2026 Wallet Manager.<br>
     Built with passion by KM.
    </div>
+
+   <button type="button"
+    class="f"
+    style="text-align:center;font-weight:700;margin-bottom:10px"
+    data-x="checkupdate">
+    Check for Updates
+   </button>
 
    <button type="button"
     class="ok"
@@ -2403,6 +2599,8 @@ async function startApp(){
 
  if(th)
   document.documentElement.dataset.theme=th;
+
+ checkForUpdates();
 
  /* Splash */
  await new Promise(resolve=>setTimeout(resolve,1350));
