@@ -22,12 +22,18 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup Project and Capacitor
+      - name: Prepare Web Assets
+        run: |
+          mkdir -p www
+          cp -r index.html manifest.json sw.js icon-192.png icon-512.png www/ 2>/dev/null || cp -r * www/ 2>/dev/null || true
+
+      - name: Setup Capacitor
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "Wallet Manager" "com.walletmanager.app" --web-dir .
+          npx cap init "Wallet Manager" "com.walletmanager.app" --web-dir www
           npx cap add android
+          npx cap sync android
 
       - name: Build Debug APK
         run: |
