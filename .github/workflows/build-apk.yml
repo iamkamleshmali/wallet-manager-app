@@ -1,48 +1,53 @@
-name: Build Android APK
+name: Build APK
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
+      - name: Code download
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Set up Node.js
+      - name: Node setup
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
-      - name: Prepare Web Assets
+      - name: Java setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Web files ko www folder mein rakho
         run: |
           mkdir -p www
-          cp -r index.html manifest.json sw.js icon-192.png icon-512.png www/ 2>/dev/null || cp -r * www/ 2>/dev/null || true
+          cp index.html manifest.json sw.js www/
+          cp icon-192.png icon-512.png www/
 
-      - name: Setup Capacitor
+      - name: Capacitor install
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "Wallet Manager" "com.walletmanager.app" --web-dir www
+
+      - name: Android project banao
+        run: |
+          npx cap init "Money Manager" com.kamlesh.moneymanager --web-dir www
           npx cap add android
           npx cap sync android
 
-      - name: Build Debug APK
+      - name: APK build karo
+        working-directory: android
         run: |
-          cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug
 
-      - name: Upload APK Artifact
+      - name: APK upload karo
         uses: actions/upload-artifact@v4
         with:
-          name: Wallet-Manager-Debug-APK
+          name: money-manager-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
