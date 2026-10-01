@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Wallet Manager</string>
+    <string name="title_activity_main">Wallet Manager</string>
+    <string name="package_name">com.kamlesh.moneymanager</string>
+    <string name="custom_url_scheme">com.kamlesh.moneymanager</string>
+</resources>

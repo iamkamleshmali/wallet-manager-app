@@ -46,8 +46,8 @@ jobs:
 
       - name: Android project banao
         run: |
-          npx cap init "Money Manager" com.kamlesh.moneymanager --web-dir www
-          npx cap add android
+          [ -f "capacitor.config.json" ] || npx cap init "Wallet Manager" com.kamlesh.moneymanager --web-dir www
+          [ -d "android" ] || npx cap add android
           npx cap sync android
 
       - name: APK build karo
