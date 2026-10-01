@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Money Manager: Track Your Money",
-  "short_name": "Track Money",
+  "name": "Wallet Manager",
+  "short_name": "Wallet Manager",
   "description": "Log your income and expenses and manage your money.",
   "start_url": "/",
   "scope": "/",
