@@ -230,7 +230,7 @@ class TransactionsTabScreen extends ConsumerWidget {
 
           // Main Sub-Tab View Content
           Expanded(
-            child: _buildSubTabContent(transState),
+            child: _buildSubTabContent(context, transState),
           ),
         ],
       ),
@@ -244,7 +244,7 @@ class TransactionsTabScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSubTabContent(TransactionsState transState) {
+  Widget _buildSubTabContent(BuildContext context, TransactionsState transState) {
     if (transState.isLoading) {
       return const Center(child: CircularProgressIndicator(color: AppColors.expense));
     }
@@ -279,7 +279,7 @@ class TransactionsTabScreen extends ConsumerWidget {
     }
 
     // Weekly / Monthly / Total / Note views
-    return _buildOverviewSummaryList(transState);
+    return _buildOverviewSummaryList(context, transState);
   }
 
   Widget _buildDailyGroupedList(List<TransactionModel> transactions) {
@@ -335,7 +335,7 @@ class TransactionsTabScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildOverviewSummaryList(TransactionsState transState) {
+  Widget _buildOverviewSummaryList(BuildContext context, TransactionsState transState) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 8, 14, 80),
       children: [
