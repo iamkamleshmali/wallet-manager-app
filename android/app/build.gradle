@@ -5,26 +5,15 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-def envKeystorePath = System.getenv("KEYSTORE_PATH")
+def keystorePath = System.getenv("KEYSTORE_PATH") ?: "release.jks"
+def keystoreFile = file(keystorePath).exists() ? file(keystorePath) : rootProject.file("app/" + keystorePath)
+if (!keystoreFile.exists()) {
+    keystoreFile = file("release.jks")
+}
+
 def envKeystorePassword = System.getenv("KEYSTORE_PASSWORD")
 def envKeyAlias = System.getenv("KEY_ALIAS")
 def envKeyPassword = System.getenv("KEY_PASSWORD")
-
-File keystoreFile = null
-if (envKeystorePath != null && !envKeystorePath.trim().isEmpty()) {
-    def f1 = rootProject.file(envKeystorePath)
-    def f2 = file(envKeystorePath)
-    def f3 = new File(envKeystorePath)
-    if (f1.exists()) {
-        keystoreFile = f1
-    } else if (f2.exists()) {
-        keystoreFile = f2
-    } else if (f3.exists()) {
-        keystoreFile = f3
-    } else {
-        keystoreFile = file(envKeystorePath)
-    }
-}
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
@@ -56,15 +45,31 @@ android {
 
     signingConfigs {
         release {
-            if (envKeystorePath != null && !envKeystorePath.trim().isEmpty() && keystoreFile != null) {
+            if (envKeystorePassword != null && !envKeystorePassword.trim().isEmpty() && envKeyAlias != null && !envKeyAlias.trim().isEmpty()) {
+                if (!keystoreFile.exists()) {
+                    def errorMsg = "❌ Keystore file not found at: '${keystoreFile.absolutePath}' (KEYSTORE_PATH='${keystorePath}'). Please ensure KEYSTORE_BASE64 is properly configured."
+                    logger.error(errorMsg)
+                    println(errorMsg)
+                    throw new GradleException(errorMsg)
+                }
                 storeFile = keystoreFile
                 storePassword = envKeystorePassword
                 keyAlias = envKeyAlias
                 keyPassword = envKeyPassword
             } else if (keystorePropertiesFile.exists() && keystoreProperties['storeFile'] != null) {
+                def propStoreFile = file(keystoreProperties['storeFile'])
+                if (!propStoreFile.exists()) {
+                    propStoreFile = rootProject.file(keystoreProperties['storeFile'])
+                }
+                if (!propStoreFile.exists()) {
+                    def errorMsg = "❌ Keystore file '${keystoreProperties['storeFile']}' defined in key.properties not found."
+                    logger.error(errorMsg)
+                    println(errorMsg)
+                    throw new GradleException(errorMsg)
+                }
                 keyAlias = keystoreProperties['keyAlias']
                 keyPassword = keystoreProperties['keyPassword']
-                storeFile = file(keystoreProperties['storeFile'])
+                storeFile = propStoreFile
                 storePassword = keystoreProperties['storePassword']
             } else {
                 // Graceful fallback to debug key if release keystore is not yet set

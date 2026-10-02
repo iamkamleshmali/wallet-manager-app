@@ -89,7 +89,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
           const SizedBox(height: 4),
           const Center(
             child: Text(
-              'Version 1.0.0 (Build 1)',
+              'Version 1.0.1 (Build 2)',
               style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 13),
             ),
           ),
