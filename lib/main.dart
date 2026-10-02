@@ -55,9 +55,13 @@ class _WalletManagerAppState extends State<WalletManagerApp> {
   Future<void> _checkSecurityLock() async {
     final passcodeEnabled = await AuthService.instance.isPasscodeEnabled();
     final hasPin = await AuthService.instance.hasPin();
+    final biometricEnabled = await AuthService.instance.isBiometricEnabled();
+    final hasBio = await AuthService.instance.isBiometricAvailable();
+
+    final requiresLock = (passcodeEnabled && hasPin) || (biometricEnabled && hasBio);
 
     setState(() {
-      _isLocked = passcodeEnabled && hasPin;
+      _isLocked = requiresLock;
       _isCheckingLock = false;
     });
   }

@@ -42,31 +42,95 @@ class StatsState {
   final StatsPeriod period;
   final TransactionType statType; // expense or income
   final int touchedSectionIndex;
+  final List<TransactionModel> periodTransactions;
+  final bool isLoading;
 
   const StatsState({
     this.period = StatsPeriod.monthly,
     this.statType = TransactionType.expense,
     this.touchedSectionIndex = -1,
+    this.periodTransactions = const [],
+    this.isLoading = false,
   });
+
+  double get totalIncome {
+    double sum = 0.0;
+    for (final tr in periodTransactions) {
+      if (tr.type == TransactionType.income) sum += tr.amount;
+    }
+    return sum;
+  }
+
+  double get totalExpense {
+    double sum = 0.0;
+    for (final tr in periodTransactions) {
+      if (tr.type == TransactionType.expense) sum += tr.amount;
+    }
+    return sum;
+  }
 
   StatsState copyWith({
     StatsPeriod? period,
     TransactionType? statType,
     int? touchedSectionIndex,
+    List<TransactionModel>? periodTransactions,
+    bool? isLoading,
   }) {
     return StatsState(
       period: period ?? this.period,
       statType: statType ?? this.statType,
       touchedSectionIndex: touchedSectionIndex ?? this.touchedSectionIndex,
+      periodTransactions: periodTransactions ?? this.periodTransactions,
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 }
 
 class StatsNotifier extends StateNotifier<StatsState> {
-  StatsNotifier() : super(const StatsState());
+  StatsNotifier() : super(const StatsState()) {
+    loadPeriodData();
+  }
+
+  Future<void> loadPeriodData() async {
+    state = state.copyWith(isLoading: true);
+    final now = DateTime.now();
+    late DateTime start;
+    late DateTime end;
+
+    switch (state.period) {
+      case StatsPeriod.weekly:
+        // Current week (starting Monday)
+        final weekday = now.weekday; // 1 = Monday, 7 = Sunday
+        final monday = DateTime(now.year, now.month, now.day).subtract(Duration(days: weekday - 1));
+        start = monday;
+        end = monday.add(const Duration(days: 7));
+        break;
+      case StatsPeriod.monthly:
+        // Current month
+        start = DateTime(now.year, now.month, 1);
+        end = DateTime(now.year, now.month + 1, 1);
+        break;
+      case StatsPeriod.yearly:
+        // Current year
+        start = DateTime(now.year, 1, 1);
+        end = DateTime(now.year + 1, 1, 1);
+        break;
+    }
+
+    try {
+      final list = await AppDatabase.instance.getTransactionsBetween(start, end);
+      state = state.copyWith(
+        periodTransactions: list,
+        isLoading: false,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+    }
+  }
 
   void setPeriod(StatsPeriod period) {
     state = state.copyWith(period: period);
+    loadPeriodData();
   }
 
   void setStatType(TransactionType type) {
@@ -79,15 +143,19 @@ class StatsNotifier extends StateNotifier<StatsState> {
 }
 
 final statsProvider = StateNotifierProvider<StatsNotifier, StatsState>((ref) {
+  // Reload stats whenever transactions change
+  ref.watch(transactionsProvider);
   return StatsNotifier();
 });
 
-// Computed category statistics provider
+// Computed category statistics provider using periodTransactions
 final categoryStatsProvider = Provider<List<CategoryStatItem>>((ref) {
-  final transState = ref.watch(transactionsProvider);
   final statsState = ref.watch(statsProvider);
 
-  final filtered = transState.transactions.where((t) => t.type == statsState.statType).toList();
+  // Transfers are excluded from category expense and income
+  final filtered = statsState.periodTransactions
+      .where((t) => t.type == statsState.statType && t.type != TransactionType.transfer)
+      .toList();
   final totalAmount = filtered.fold<double>(0.0, (acc, t) => acc + t.amount);
 
   if (totalAmount <= 0) return [];

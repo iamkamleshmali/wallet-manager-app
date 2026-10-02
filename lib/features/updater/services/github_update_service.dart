@@ -61,9 +61,18 @@ class GithubUpdateService {
 
   bool _isRemoteVersionHigher(String local, String remote) {
     try {
-      // Remove any trailing build numbers like +1 or -beta
-      final cleanLocal = local.split('+').first.split('-').first.trim();
-      final cleanRemote = remote.split('+').first.split('-').first.trim();
+      // Remove any leading 'v' and trailing build numbers/metadata
+      var cleanLocal = local.trim();
+      if (cleanLocal.startsWith('v') || cleanLocal.startsWith('V')) {
+        cleanLocal = cleanLocal.substring(1);
+      }
+      cleanLocal = cleanLocal.split('+').first.split('-').first.trim();
+
+      var cleanRemote = remote.trim();
+      if (cleanRemote.startsWith('v') || cleanRemote.startsWith('V')) {
+        cleanRemote = cleanRemote.substring(1);
+      }
+      cleanRemote = cleanRemote.split('+').first.split('-').first.trim();
 
       final localParts = cleanLocal.split('.').map((e) => int.tryParse(e) ?? 0).toList();
       final remoteParts = cleanRemote.split('.').map((e) => int.tryParse(e) ?? 0).toList();
@@ -91,7 +100,6 @@ class GithubUpdateService {
 
       Directory? saveDir;
       if (Platform.isAndroid) {
-        // Use external cache or application support for Android Package Installer access
         saveDir = await getExternalStorageDirectory() ?? await getApplicationSupportDirectory();
       } else {
         saveDir = await getTemporaryDirectory();
@@ -100,7 +108,9 @@ class GithubUpdateService {
       final filePath = '${saveDir.path}/wallet_manager_latest.apk';
       final file = File(filePath);
       if (await file.exists()) {
-        await file.delete();
+        try {
+          await file.delete();
+        } catch (_) {}
       }
 
       final response = await _dio.download(
@@ -110,8 +120,15 @@ class GithubUpdateService {
         onReceiveProgress: onProgress,
       );
 
-      if (response.statusCode == 200) {
-        return filePath;
+      final downloadedFile = File(filePath);
+      if (response.statusCode == 200 && await downloadedFile.exists()) {
+        final length = await downloadedFile.length();
+        if (length > 1024 * 1024) { // Valid APK should be at least >1MB
+          return filePath;
+        } else {
+          debugPrint('Downloaded APK file is too small or corrupt: $length bytes');
+          return null;
+        }
       }
       return null;
     } catch (e) {
@@ -127,12 +144,17 @@ class GithubUpdateService {
   /// Requests package installation permission and launches Android Package Installer.
   Future<bool> installApk(String filePath) async {
     try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        debugPrint('APK file does not exist at path: $filePath');
+        return false;
+      }
+
       if (Platform.isAndroid) {
         final installPermission = await Permission.requestInstallPackages.status;
         if (!installPermission.isGranted) {
           final requested = await Permission.requestInstallPackages.request();
           if (!requested.isGranted) {
-            // User did not grant install permission
             return false;
           }
         }

@@ -17,9 +17,21 @@ class AppDatabase {
   Database? _db;
 
   Future<Database> get database async {
-    if (_db != null) return _db!;
+    if (_db != null && _db!.isOpen) return _db!;
     _db = await _initDatabase();
     return _db!;
+  }
+
+  Future<void> close() async {
+    if (_db != null && _db!.isOpen) {
+      await _db!.close();
+      _db = null;
+    }
+  }
+
+  Future<Database> reopen() async {
+    await close();
+    return await database;
   }
 
   Future<String> getDatabasePath() async {
@@ -32,8 +44,24 @@ class AppDatabase {
     return await openDatabase(
       dbPath,
       version: AppConstants.databaseVersion,
+      onConfigure: _onConfigure,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
+  }
+
+  Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Version 2 ensures all indexes exist and schema integrity
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_trans_datetime ON transactions (date_time)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_trans_account ON transactions (account_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_trans_category ON transactions (category_id)');
+    }
+    // Future migrations (e.g. if (oldVersion < 3) { ... }) can be added incrementally here safely
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -255,7 +283,98 @@ class AppDatabase {
     });
   }
 
-  // Reversible Transaction Delete
+  // Safely delete a photo file if no other transaction references it
+  Future<void> _safeDeleteReceiptFile(DatabaseExecutor db, String? photoPath, {String? excludeTransactionId}) async {
+    if (photoPath == null || photoPath.trim().isEmpty) return;
+    try {
+      final whereClause = excludeTransactionId != null
+          ? 'photo_path = ? AND id != ?'
+          : 'photo_path = ?';
+      final whereArgs = excludeTransactionId != null
+          ? [photoPath, excludeTransactionId]
+          : [photoPath];
+
+      final countResult = Sqflite.firstIntValue(await db.rawQuery(
+        'SELECT COUNT(*) FROM transactions WHERE $whereClause',
+        whereArgs,
+      ));
+
+      if ((countResult ?? 0) == 0) {
+        final file = File(photoPath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error safely deleting receipt file: $e');
+    }
+  }
+
+  // Update existing transaction with atomic account balance recalculation
+  Future<void> updateTransaction(TransactionModel oldTr, TransactionModel newTr) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // 1. Revert previous transaction impacts on accounts
+      if (oldTr.type == TransactionType.expense) {
+        await txn.rawUpdate(
+          'UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE id = ?',
+          [oldTr.amount, DateTime.now().toIso8601String(), oldTr.accountId],
+        );
+      } else if (oldTr.type == TransactionType.income) {
+        await txn.rawUpdate(
+          'UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?',
+          [oldTr.amount, DateTime.now().toIso8601String(), oldTr.accountId],
+        );
+      } else if (oldTr.type == TransactionType.transfer && oldTr.toAccountId != null) {
+        await txn.rawUpdate(
+          'UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE id = ?',
+          [oldTr.amount, DateTime.now().toIso8601String(), oldTr.accountId],
+        );
+        await txn.rawUpdate(
+          'UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?',
+          [oldTr.amount, DateTime.now().toIso8601String(), oldTr.toAccountId],
+        );
+      }
+
+      // 2. Apply new transaction impacts on accounts
+      final nowStr = DateTime.now().toIso8601String();
+      if (newTr.type == TransactionType.expense) {
+        await txn.rawUpdate(
+          'UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?',
+          [newTr.amount, nowStr, newTr.accountId],
+        );
+      } else if (newTr.type == TransactionType.income) {
+        await txn.rawUpdate(
+          'UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE id = ?',
+          [newTr.amount, nowStr, newTr.accountId],
+        );
+      } else if (newTr.type == TransactionType.transfer && newTr.toAccountId != null) {
+        await txn.rawUpdate(
+          'UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?',
+          [newTr.amount, nowStr, newTr.accountId],
+        );
+        await txn.rawUpdate(
+          'UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE id = ?',
+          [newTr.amount, nowStr, newTr.toAccountId],
+        );
+      }
+
+      // 3. Update the transaction row itself
+      await txn.update(
+        'transactions',
+        newTr.toMap(),
+        where: 'id = ?',
+        whereArgs: [newTr.id],
+      );
+
+      // 4. Clean up old receipt if photo changed or was removed
+      if (oldTr.photoPath != null && oldTr.photoPath != newTr.photoPath) {
+        await _safeDeleteReceiptFile(txn, oldTr.photoPath, excludeTransactionId: newTr.id);
+      }
+    });
+  }
+
+  // Reversible Transaction Delete with receipt file cleanup
   Future<void> deleteTransaction(String id) async {
     final db = await database;
     await db.transaction((txn) async {
@@ -286,6 +405,9 @@ class AppDatabase {
       }
 
       await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
+
+      // Safe receipt cleanup
+      await _safeDeleteReceiptFile(txn, tr.photoPath, excludeTransactionId: id);
     });
   }
 
@@ -330,10 +452,14 @@ class AppDatabase {
 
   // Query Transactions joined with Accounts and Categories
   Future<List<TransactionModel>> getTransactionsForMonth(int year, int month) async {
-    final db = await database;
-    final start = DateTime(year, month, 1).toIso8601String();
-    final end = DateTime(year, month + 1, 1).toIso8601String();
+    final start = DateTime(year, month, 1);
+    final end = DateTime(year, month + 1, 1);
+    return getTransactionsBetween(start, end);
+  }
 
+  // Query Transactions between dates
+  Future<List<TransactionModel>> getTransactionsBetween(DateTime start, DateTime end) async {
+    final db = await database;
     final results = await db.rawQuery('''
       SELECT t.*,
              a.name AS account_name,
@@ -347,7 +473,52 @@ class AppDatabase {
       LEFT JOIN categories c ON t.category_id = c.id
       WHERE t.date_time >= ? AND t.date_time < ?
       ORDER BY t.date_time DESC, t.created_at DESC
-    ''', [start, end]);
+    ''', [start.toIso8601String(), end.toIso8601String()]);
+
+    return results.map((row) => TransactionModel.fromMap(row)).toList();
+  }
+
+  // Global Transaction Search across full database history
+  Future<List<TransactionModel>> searchTransactions({
+    String query = '',
+    String? accountId,
+    String? categoryId,
+  }) async {
+    final db = await database;
+    final StringBuffer where = StringBuffer('1=1');
+    final List<dynamic> args = [];
+
+    if (accountId != null && accountId.isNotEmpty) {
+      where.write(' AND (t.account_id = ? OR t.to_account_id = ?)');
+      args.add(accountId);
+      args.add(accountId);
+    }
+
+    if (categoryId != null && categoryId.isNotEmpty) {
+      where.write(' AND t.category_id = ?');
+      args.add(categoryId);
+    }
+
+    if (query.trim().isNotEmpty) {
+      where.write(' AND (t.note LIKE ? OR c.name LIKE ? OR a.name LIKE ? OR ta.name LIKE ?)');
+      final searchPattern = '%${query.trim()}%';
+      args.addAll([searchPattern, searchPattern, searchPattern, searchPattern]);
+    }
+
+    final results = await db.rawQuery('''
+      SELECT t.*,
+             a.name AS account_name,
+             ta.name AS to_account_name,
+             c.name AS category_name,
+             c.icon_code_point AS category_icon_code_point,
+             c.color_value AS category_color_value
+      FROM transactions t
+      LEFT JOIN accounts a ON t.account_id = a.id
+      LEFT JOIN accounts ta ON t.to_account_id = ta.id
+      LEFT JOIN categories c ON t.category_id = c.id
+      WHERE $where
+      ORDER BY t.date_time DESC, t.created_at DESC
+    ''', args);
 
     return results.map((row) => TransactionModel.fromMap(row)).toList();
   }
@@ -388,6 +559,18 @@ class AppDatabase {
 
   Future<void> deleteAccount(String accountId) async {
     final db = await database;
+    // Check if account has dependent transactions before deleting
+    final count = Sqflite.firstIntValue(await db.rawQuery(
+      'SELECT COUNT(*) FROM transactions WHERE account_id = ? OR to_account_id = ?',
+      [accountId, accountId],
+    ));
+
+    if ((count ?? 0) > 0) {
+      throw AccountHasTransactionsException(
+        'Cannot delete account because it contains $count transaction(s). Please delete or reassign them first.',
+      );
+    }
+
     await db.delete('accounts', where: 'id = ?', whereArgs: [accountId]);
   }
 
@@ -401,4 +584,72 @@ class AppDatabase {
     final db = await database;
     await db.insert('categories', category.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
+
+  /// Safely replaces the SQLite database file from a source file (e.g. from local import or cloud download).
+  /// Ensures validation of SQLite format, graceful rollback on failure, connection closing and reopening.
+  Future<void> replaceDatabaseFileSafely(File sourceFile) async {
+    if (!await sourceFile.exists()) {
+      throw const FileSystemException('Source backup file does not exist');
+    }
+
+    // Verify it is a valid SQLite file by testing opening it in read-only mode first
+    Database? testDb;
+    try {
+      testDb = await openReadOnlyDatabase(sourceFile.path);
+      // Ensure expected tables exist
+      final tables = await testDb.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('accounts', 'transactions')");
+      if (tables.length < 2) {
+        throw const FormatException('Selected file is not a valid Wallet Manager database backup');
+      }
+    } finally {
+      if (testDb != null && testDb.isOpen) {
+        await testDb.close();
+      }
+    }
+
+    final dbPath = await getDatabasePath();
+    final currentDbFile = File(dbPath);
+    final backupCopyPath = '$dbPath.bak';
+    final backupCopyFile = File(backupCopyPath);
+
+    // Close active DB connection
+    await close();
+
+    bool backupCreated = false;
+    try {
+      if (await currentDbFile.exists()) {
+        await currentDbFile.copy(backupCopyPath);
+        backupCreated = true;
+      }
+
+      // Copy new file over active db path
+      await sourceFile.copy(dbPath);
+
+      // Try reopening to verify integrity
+      await reopen();
+
+      // If successful, remove the temporary backup file
+      if (backupCreated && await backupCopyFile.exists()) {
+        await backupCopyFile.delete();
+      }
+    } catch (e) {
+      // Rollback if anything failed
+      if (backupCreated && await backupCopyFile.exists()) {
+        try {
+          await backupCopyFile.copy(dbPath);
+          await backupCopyFile.delete();
+          await reopen();
+        } catch (_) {}
+      }
+      rethrow;
+    }
+  }
+}
+
+class AccountHasTransactionsException implements Exception {
+  final String message;
+  const AccountHasTransactionsException(this.message);
+
+  @override
+  String toString() => message;
 }

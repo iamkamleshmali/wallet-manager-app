@@ -28,6 +28,7 @@ dependencies:
   # Biometric & Passcode Security
   local_auth: ^2.2.0
   flutter_secure_storage: ^9.2.2
+  crypto: ^3.0.3
 
   # Receipt Photo Capture
   image_picker: ^1.1.2

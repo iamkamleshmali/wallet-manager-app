@@ -60,7 +60,7 @@ class TransactionsTabScreen extends ConsumerWidget {
                       final isSelected = selectedMonth == monthNum;
                       return ChoiceChip(
                         label: Text(
-                          DateFormatters.formatMonthYear(DateTime(2026, monthNum, 1)).split(' ').first,
+                          DateFormatters.formatMonthYear(DateTime(selectedYear, monthNum, 1)).split(' ').first,
                           style: TextStyle(
                             color: isSelected ? Colors.white : AppColors.textSecondaryDark,
                             fontSize: 12,
@@ -324,7 +324,10 @@ class TransactionsTabScreen extends ConsumerWidget {
                 dayExpense: dayExpense,
               ),
               const Divider(color: AppColors.darkDivider),
-              ...dayTrans.map((tr) => TransactionItemTile(transaction: tr)),
+              ...dayTrans.map((tr) => TransactionItemTile(
+                    transaction: tr,
+                    onTap: () => TransactionFormModal.show(context, transactionToEdit: tr),
+                  )),
             ],
           ),
         );
@@ -387,7 +390,10 @@ class TransactionsTabScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: AppColors.darkBorder),
                 ),
-                child: TransactionItemTile(transaction: t),
+                child: TransactionItemTile(
+                  transaction: t,
+                  onTap: () => TransactionFormModal.show(context, transactionToEdit: t),
+                ),
               ),
             ),
       ],

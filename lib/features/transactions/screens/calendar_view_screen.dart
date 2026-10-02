@@ -6,6 +6,7 @@ import '../../../core/utils/date_formatters.dart';
 import '../models/transaction_model.dart';
 import '../providers/transaction_provider.dart';
 import '../widgets/transaction_item_tile.dart';
+import 'transaction_form_modal.dart';
 
 class CalendarViewScreen extends ConsumerStatefulWidget {
   const CalendarViewScreen({super.key});
@@ -177,7 +178,11 @@ class _CalendarViewScreenState extends ConsumerState<CalendarViewScreen> {
                     itemCount: selectedDayTransactions.length,
                     separatorBuilder: (_, __) => const Divider(color: AppColors.darkDivider),
                     itemBuilder: (context, index) {
-                      return TransactionItemTile(transaction: selectedDayTransactions[index]);
+                      final item = selectedDayTransactions[index];
+                      return TransactionItemTile(
+                        transaction: item,
+                        onTap: () => TransactionFormModal.show(context, transactionToEdit: item),
+                      );
                     },
                   ),
           ),

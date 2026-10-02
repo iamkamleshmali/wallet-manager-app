@@ -11,7 +11,7 @@ class AppConstants {
 
   // Database
   static const String databaseName = 'money_manager_km.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 2;
 
   // Google Drive AppData
   static const String googleDriveBackupFileName = 'money_manager_backup.sqlite';

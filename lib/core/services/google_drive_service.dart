@@ -135,15 +135,23 @@ class GoogleDriveBackupService {
         downloadOptions: drive.DownloadOptions.fullMedia,
       ) as drive.Media;
 
-      final dbPath = await AppDatabase.instance.getDatabasePath();
-      final destinationFile = File(dbPath);
+      final tempDir = await Directory.systemTemp.createTemp('gdrive_restore_');
+      final tempFile = File('${tempDir.path}/incoming_backup.sqlite');
 
       final List<int> dataStore = [];
       await downloaded.stream.forEach((data) {
         dataStore.addAll(data);
       });
 
-      await destinationFile.writeAsBytes(dataStore, flush: true);
+      await tempFile.writeAsBytes(dataStore, flush: true);
+
+      // Atomically and safely replace DB with connection closing and verification
+      await AppDatabase.instance.replaceDatabaseFileSafely(tempFile);
+
+      // Clean up temp file
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
       return true;
     } catch (e) {
       debugPrint('Google Drive Restore error: $e');

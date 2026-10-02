@@ -21,7 +21,7 @@ class StatsTabScreen extends ConsumerWidget {
     final categoryStats = ref.watch(categoryStatsProvider);
 
     final isExpense = statsState.statType == TransactionType.expense;
-    final totalAmount = isExpense ? transState.totalExpense : transState.totalIncome;
+    final totalAmount = isExpense ? statsState.totalExpense : statsState.totalIncome;
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,

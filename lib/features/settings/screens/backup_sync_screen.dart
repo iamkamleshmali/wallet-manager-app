@@ -70,11 +70,10 @@ class _BackupSyncScreenState extends ConsumerState<BackupSyncScreen> {
     setState(() => _isLoading = true);
     try {
       final pickedFile = File(result.files.single.path!);
-      final dbPath = await AppDatabase.instance.getDatabasePath();
-      await pickedFile.copy(dbPath);
+      await AppDatabase.instance.replaceDatabaseFileSafely(pickedFile);
 
-      ref.read(accountsProvider.notifier).loadAccounts();
-      ref.read(transactionsProvider.notifier).loadTransactions();
+      await ref.read(accountsProvider.notifier).loadAccounts();
+      await ref.read(transactionsProvider.notifier).loadTransactions();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -119,8 +118,8 @@ class _BackupSyncScreenState extends ConsumerState<BackupSyncScreen> {
       final success = await GoogleDriveBackupService.instance.restoreBackupFromDrive();
       if (mounted) {
         if (success) {
-          ref.read(accountsProvider.notifier).loadAccounts();
-          ref.read(transactionsProvider.notifier).loadTransactions();
+          await ref.read(accountsProvider.notifier).loadAccounts();
+          await ref.read(transactionsProvider.notifier).loadTransactions();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Database restored from Google Drive!')),
           );

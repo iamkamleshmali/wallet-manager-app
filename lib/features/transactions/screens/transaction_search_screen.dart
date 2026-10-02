@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../accounts/providers/account_provider.dart';
+import '../models/transaction_model.dart';
 import '../providers/transaction_provider.dart';
 import '../widgets/transaction_item_tile.dart';
+import 'transaction_form_modal.dart';
 
 class TransactionSearchScreen extends ConsumerStatefulWidget {
   const TransactionSearchScreen({super.key});
@@ -14,19 +17,58 @@ class TransactionSearchScreen extends ConsumerStatefulWidget {
 
 class _TransactionSearchScreenState extends ConsumerState<TransactionSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  List<TransactionModel> _searchResults = [];
+  bool _isSearching = false;
+  String? _filterAccountId;
+  String? _filterCategoryId;
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Run initial search with empty query across full database
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _performSearch();
+    });
+  }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
+  void _onSearchChanged(String query) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 250), () {
+      _performSearch();
+    });
+  }
+
+  Future<void> _performSearch() async {
+    setState(() => _isSearching = true);
+    try {
+      final results = await ref.read(transactionsProvider.notifier).searchDatabase(
+        query: _searchController.text,
+        accountId: _filterAccountId,
+        categoryId: _filterCategoryId,
+      );
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isSearching = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final transState = ref.watch(transactionsProvider);
     final accounts = ref.watch(accountsProvider).accounts;
-    final categories = transState.categories;
-    final results = transState.filteredTransactions;
+    final categories = ref.watch(transactionsProvider).categories;
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
@@ -42,9 +84,7 @@ class _TransactionSearchScreenState extends ConsumerState<TransactionSearchScree
             fillColor: Colors.transparent,
           ),
           style: const TextStyle(color: AppColors.textPrimaryDark, fontSize: 16),
-          onChanged: (query) {
-            ref.read(transactionsProvider.notifier).setSearchQuery(query);
-          },
+          onChanged: _onSearchChanged,
         ),
         actions: [
           if (_searchController.text.isNotEmpty)
@@ -52,7 +92,7 @@ class _TransactionSearchScreenState extends ConsumerState<TransactionSearchScree
               icon: const Icon(Icons.clear_rounded),
               onPressed: () {
                 _searchController.clear();
-                ref.read(transactionsProvider.notifier).setSearchQuery('');
+                _performSearch();
               },
             ),
         ],
@@ -68,15 +108,15 @@ class _TransactionSearchScreenState extends ConsumerState<TransactionSearchScree
                 // Account Filter
                 FilterChip(
                   label: Text(
-                    transState.filterAccountId != null
-                        ? accounts.firstWhere((a) => a.id == transState.filterAccountId, orElse: () => accounts.first).name
+                    _filterAccountId != null
+                        ? accounts.firstWhere((a) => a.id == _filterAccountId, orElse: () => accounts.first).name
                         : 'All Accounts',
                     style: TextStyle(
-                      color: transState.filterAccountId != null ? Colors.white : AppColors.textSecondaryDark,
+                      color: _filterAccountId != null ? Colors.white : AppColors.textSecondaryDark,
                       fontSize: 12,
                     ),
                   ),
-                  selected: transState.filterAccountId != null,
+                  selected: _filterAccountId != null,
                   selectedColor: AppColors.expense,
                   backgroundColor: AppColors.darkCard,
                   onSelected: (selected) {
@@ -87,29 +127,34 @@ class _TransactionSearchScreenState extends ConsumerState<TransactionSearchScree
                 // Category Filter
                 FilterChip(
                   label: Text(
-                    transState.filterCategoryId != null
-                        ? categories.firstWhere((c) => c.id == transState.filterCategoryId).name
+                    _filterCategoryId != null
+                        ? (categories.any((c) => c.id == _filterCategoryId)
+                            ? categories.firstWhere((c) => c.id == _filterCategoryId).name
+                            : 'Category')
                         : 'All Categories',
                     style: TextStyle(
-                      color: transState.filterCategoryId != null ? Colors.white : AppColors.textSecondaryDark,
+                      color: _filterCategoryId != null ? Colors.white : AppColors.textSecondaryDark,
                       fontSize: 12,
                     ),
                   ),
-                  selected: transState.filterCategoryId != null,
+                  selected: _filterCategoryId != null,
                   selectedColor: AppColors.income,
                   backgroundColor: AppColors.darkCard,
                   onSelected: (selected) {
                     _showCategoryFilterDialog(context, categories);
                   },
                 ),
-                if (transState.filterAccountId != null || transState.filterCategoryId != null) ...[
+                if (_filterAccountId != null || _filterCategoryId != null) ...[
                   const SizedBox(width: 8),
                   ActionChip(
                     label: const Text('Reset Filters', style: TextStyle(color: AppColors.expense, fontSize: 12)),
                     backgroundColor: AppColors.darkCard,
                     onPressed: () {
-                      ref.read(transactionsProvider.notifier).setFilterAccount(null);
-                      ref.read(transactionsProvider.notifier).setFilterCategory(null);
+                      setState(() {
+                        _filterAccountId = null;
+                        _filterCategoryId = null;
+                      });
+                      _performSearch();
                     },
                   ),
                 ],
@@ -120,22 +165,30 @@ class _TransactionSearchScreenState extends ConsumerState<TransactionSearchScree
 
           // Search Results List
           Expanded(
-            child: results.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No matching transactions found.',
-                      style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    itemCount: results.length,
-                    separatorBuilder: (_, __) => const Divider(color: AppColors.darkDivider),
-                    itemBuilder: (context, index) {
-                      final tr = results[index];
-                      return TransactionItemTile(transaction: tr);
-                    },
-                  ),
+            child: _isSearching
+                ? const Center(child: CircularProgressIndicator(color: AppColors.expense))
+                : _searchResults.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No matching transactions found.',
+                          style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        itemCount: _searchResults.length,
+                        separatorBuilder: (_, __) => const Divider(color: AppColors.darkDivider),
+                        itemBuilder: (context, index) {
+                          final tr = _searchResults[index];
+                          return TransactionItemTile(
+                            transaction: tr,
+                            onTap: () async {
+                              await TransactionFormModal.show(context, transactionToEdit: tr);
+                              _performSearch();
+                            },
+                          );
+                        },
+                      ),
           ),
         ],
       ),
@@ -154,16 +207,18 @@ class _TransactionSearchScreenState extends ConsumerState<TransactionSearchScree
             ListTile(
               title: const Text('All Accounts', style: TextStyle(color: AppColors.textPrimaryDark)),
               onTap: () {
-                ref.read(transactionsProvider.notifier).setFilterAccount(null);
+                setState(() => _filterAccountId = null);
                 Navigator.pop(context);
+                _performSearch();
               },
             ),
             ...accounts.map(
               (a) => ListTile(
                 title: Text(a.name, style: const TextStyle(color: AppColors.textPrimaryDark)),
                 onTap: () {
-                  ref.read(transactionsProvider.notifier).setFilterAccount(a.id);
+                  setState(() => _filterAccountId = a.id);
                   Navigator.pop(context);
+                  _performSearch();
                 },
               ),
             ),
@@ -186,8 +241,9 @@ class _TransactionSearchScreenState extends ConsumerState<TransactionSearchScree
               ListTile(
                 title: const Text('All Categories', style: TextStyle(color: AppColors.textPrimaryDark)),
                 onTap: () {
-                  ref.read(transactionsProvider.notifier).setFilterCategory(null);
+                  setState(() => _filterCategoryId = null);
                   Navigator.pop(context);
+                  _performSearch();
                 },
               ),
               ...categories.map(
@@ -195,8 +251,9 @@ class _TransactionSearchScreenState extends ConsumerState<TransactionSearchScree
                   leading: Icon(c.iconData, color: c.color, size: 20),
                   title: Text(c.name, style: const TextStyle(color: AppColors.textPrimaryDark)),
                   onTap: () {
-                    ref.read(transactionsProvider.notifier).setFilterCategory(c.id);
+                    setState(() => _filterCategoryId = c.id);
                     Navigator.pop(context);
+                    _performSearch();
                   },
                 ),
               ),

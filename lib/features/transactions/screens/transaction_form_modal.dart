@@ -14,18 +14,27 @@ import '../widgets/amount_calculator_keypad.dart';
 
 class TransactionFormModal extends ConsumerStatefulWidget {
   final TransactionType initialType;
+  final TransactionModel? transactionToEdit;
 
   const TransactionFormModal({
     super.key,
     this.initialType = TransactionType.expense,
+    this.transactionToEdit,
   });
 
-  static Future<void> show(BuildContext context, {TransactionType initialType = TransactionType.expense}) {
+  static Future<void> show(
+    BuildContext context, {
+    TransactionType initialType = TransactionType.expense,
+    TransactionModel? transactionToEdit,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => TransactionFormModal(initialType: initialType),
+      builder: (_) => TransactionFormModal(
+        initialType: transactionToEdit?.type ?? initialType,
+        transactionToEdit: transactionToEdit,
+      ),
     );
   }
 
@@ -40,39 +49,56 @@ class _TransactionFormModalState extends ConsumerState<TransactionFormModal> {
   String? _selectedToAccountId;
   String? _selectedCategoryId;
   String _amountString = '0';
-  final TextEditingController _noteController = TextEditingController();
+  late final TextEditingController _noteController;
   String? _attachedPhotoPath;
   bool _showKeypad = true;
 
   final ImagePicker _picker = ImagePicker();
 
+  bool get _isEditing => widget.transactionToEdit != null;
+
   @override
   void initState() {
     super.initState();
-    _selectedType = widget.initialType;
-    _selectedDateTime = DateTime.now();
+    final edit = widget.transactionToEdit;
+    if (edit != null) {
+      _selectedType = edit.type;
+      _selectedDateTime = edit.dateTime;
+      _selectedAccountId = edit.accountId;
+      _selectedToAccountId = edit.toAccountId;
+      _selectedCategoryId = edit.categoryId;
+      _amountString = edit.amount % 1 == 0 ? edit.amount.toInt().toString() : edit.amount.toString();
+      _noteController = TextEditingController(text: edit.note ?? '');
+      _attachedPhotoPath = edit.photoPath;
+      _showKeypad = false;
+    } else {
+      _selectedType = widget.initialType;
+      _selectedDateTime = DateTime.now();
+      _noteController = TextEditingController();
+      _showKeypad = true;
 
-    // Default source account
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final accounts = ref.read(accountsProvider).accounts;
-      if (accounts.isNotEmpty) {
-        setState(() {
-          _selectedAccountId = accounts.first.id;
-          if (accounts.length > 1) {
-            _selectedToAccountId = accounts[1].id;
-          }
-        });
-      }
+      // Default source account
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final accounts = ref.read(accountsProvider).accounts;
+        if (accounts.isNotEmpty) {
+          setState(() {
+            _selectedAccountId = accounts.first.id;
+            if (accounts.length > 1) {
+              _selectedToAccountId = accounts[1].id;
+            }
+          });
+        }
 
-      // Default category
-      final cats = ref.read(transactionsProvider).categories;
-      final matchedCats = cats.where((c) => c.type.name == _selectedType.name).toList();
-      if (matchedCats.isNotEmpty) {
-        setState(() {
-          _selectedCategoryId = matchedCats.first.id;
-        });
-      }
-    });
+        // Default category
+        final cats = ref.read(transactionsProvider).categories;
+        final matchedCats = cats.where((c) => c.type.name == _selectedType.name).toList();
+        if (matchedCats.isNotEmpty) {
+          setState(() {
+            _selectedCategoryId = matchedCats.first.id;
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -188,7 +214,7 @@ class _TransactionFormModalState extends ConsumerState<TransactionFormModal> {
     }
   }
 
-  void _saveTransaction() {
+  Future<void> _saveTransaction() async {
     final double amount = double.tryParse(_amountString) ?? 0.0;
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -211,24 +237,97 @@ class _TransactionFormModalState extends ConsumerState<TransactionFormModal> {
       return;
     }
 
-    final newTransaction = TransactionModel(
-      id: const Uuid().v4(),
-      type: _selectedType,
-      amount: amount,
-      dateTime: _selectedDateTime,
-      accountId: _selectedAccountId!,
-      toAccountId: _selectedType == TransactionType.transfer ? _selectedToAccountId : null,
-      categoryId: _selectedType != TransactionType.transfer ? _selectedCategoryId : null,
-      note: _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null,
-      photoPath: _attachedPhotoPath,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+    if (_selectedType == TransactionType.transfer && _selectedAccountId == _selectedToAccountId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('From and To accounts must be different')),
+      );
+      return;
+    }
+
+    try {
+      if (_isEditing) {
+        final old = widget.transactionToEdit!;
+        final updated = old.copyWith(
+          type: _selectedType,
+          amount: amount,
+          dateTime: _selectedDateTime,
+          accountId: _selectedAccountId!,
+          toAccountId: _selectedType == TransactionType.transfer ? _selectedToAccountId : null,
+          categoryId: _selectedType != TransactionType.transfer ? _selectedCategoryId : null,
+          note: _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null,
+          photoPath: _attachedPhotoPath,
+          updatedAt: DateTime.now(),
+        );
+
+        await ref.read(transactionsProvider.notifier).updateTransaction(old, updated);
+        await ref.read(accountsProvider.notifier).loadAccounts();
+      } else {
+        final newTransaction = TransactionModel(
+          id: const Uuid().v4(),
+          type: _selectedType,
+          amount: amount,
+          dateTime: _selectedDateTime,
+          accountId: _selectedAccountId!,
+          toAccountId: _selectedType == TransactionType.transfer ? _selectedToAccountId : null,
+          categoryId: _selectedType != TransactionType.transfer ? _selectedCategoryId : null,
+          note: _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null,
+          photoPath: _attachedPhotoPath,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        await ref.read(transactionsProvider.notifier).addTransaction(newTransaction);
+        await ref.read(accountsProvider.notifier).loadAccounts();
+      }
+
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save transaction: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteTransaction() async {
+    if (!_isEditing) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.darkCard,
+        title: const Text('Delete Transaction', style: TextStyle(color: AppColors.expense)),
+        content: const Text(
+          'Are you sure you want to delete this transaction? Account balances will be reverted.',
+          style: TextStyle(color: AppColors.textPrimaryDark),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondaryDark)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.expense),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
 
-    ref.read(transactionsProvider.notifier).addTransaction(newTransaction);
-    ref.read(accountsProvider.notifier).loadAccounts();
-
-    Navigator.pop(context);
+    if (confirmed == true && mounted) {
+      try {
+        await ref.read(transactionsProvider.notifier).deleteTransaction(widget.transactionToEdit!.id);
+        await ref.read(accountsProvider.notifier).loadAccounts();
+        if (mounted) Navigator.pop(context);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete transaction: $e')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -245,7 +344,7 @@ class _TransactionFormModalState extends ConsumerState<TransactionFormModal> {
       ),
       child: Column(
         children: [
-          // Top Handle & Close
+          // Top Handle & Close & Actions
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
@@ -255,24 +354,34 @@ class _TransactionFormModalState extends ConsumerState<TransactionFormModal> {
                   icon: const Icon(Icons.close_rounded, color: AppColors.textSecondaryDark),
                   onPressed: () => Navigator.pop(context),
                 ),
-                Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.darkBorder,
-                    borderRadius: BorderRadius.circular(2),
+                Text(
+                  _isEditing ? 'Edit Transaction' : 'New Transaction',
+                  style: const TextStyle(
+                    color: AppColors.textPrimaryDark,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                TextButton(
-                  onPressed: _saveTransaction,
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(
-                      color: AppColors.expense,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_isEditing)
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded, color: AppColors.expense, size: 22),
+                        onPressed: _deleteTransaction,
+                      ),
+                    TextButton(
+                      onPressed: _saveTransaction,
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(
+                          color: AppColors.expense,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),

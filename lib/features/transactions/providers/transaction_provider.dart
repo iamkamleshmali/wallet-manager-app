@@ -117,8 +117,10 @@ class TransactionsState {
 }
 
 class TransactionsNotifier extends StateNotifier<TransactionsState> {
-  TransactionsNotifier()
-      : super(TransactionsState(selectedDate: DateTime(2026, 10, 2))) {
+  final Ref? _ref;
+
+  TransactionsNotifier([this._ref])
+      : super(TransactionsState(selectedDate: DateTime.now())) {
     loadTransactions();
   }
 
@@ -183,13 +185,31 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     await loadTransactions();
   }
 
+  Future<void> updateTransaction(TransactionModel oldTr, TransactionModel newTr) async {
+    await AppDatabase.instance.updateTransaction(oldTr, newTr);
+    await loadTransactions();
+  }
+
   Future<void> deleteTransaction(String id) async {
     await AppDatabase.instance.deleteTransaction(id);
     await loadTransactions();
+  }
+
+  // Global search across the full SQLite transaction database
+  Future<List<TransactionModel>> searchDatabase({
+    String query = '',
+    String? accountId,
+    String? categoryId,
+  }) async {
+    return await AppDatabase.instance.searchTransactions(
+      query: query,
+      accountId: accountId,
+      categoryId: categoryId,
+    );
   }
 }
 
 final transactionsProvider =
     StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
-  return TransactionsNotifier();
+  return TransactionsNotifier(ref);
 });

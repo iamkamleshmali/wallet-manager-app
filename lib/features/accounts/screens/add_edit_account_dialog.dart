@@ -45,42 +45,89 @@ class _AddEditAccountDialogState extends ConsumerState<AddEditAccountDialog> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final name = _nameController.text.trim();
-    if (name.isEmpty) return;
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an account name')),
+      );
+      return;
+    }
     final balance = double.tryParse(_balanceController.text.trim()) ?? 0.0;
 
     final now = DateTime.now();
-    if (widget.accountToEdit != null) {
-      final updated = widget.accountToEdit!.copyWith(
-        name: name,
-        group: _selectedGroup,
-        balance: balance,
-        includeInNetWorth: _includeInNetWorth,
-        updatedAt: now,
-      );
-      ref.read(accountsProvider.notifier).updateAccount(updated);
-    } else {
-      final newAcc = AccountModel(
-        id: const Uuid().v4(),
-        name: name,
-        group: _selectedGroup,
-        balance: balance,
-        includeInNetWorth: _includeInNetWorth,
-        iconCodePoint: _selectedGroup.iconData.codePoint,
-        colorValue: _selectedGroup.isLiability ? 0xFFFF5E57 : 0xFF2E86DE,
-        createdAt: now,
-        updatedAt: now,
-      );
-      ref.read(accountsProvider.notifier).addAccount(newAcc);
+    try {
+      if (widget.accountToEdit != null) {
+        final existing = widget.accountToEdit!;
+        final balanceChanged = (existing.balance - balance).abs() > 0.001;
+
+        // If balance was modified during edit, route through balance adjustment to preserve ledger history
+        if (balanceChanged) {
+          await ref.read(accountsProvider.notifier).adjustBalance(
+            accountId: existing.id,
+            newBalance: balance,
+            note: 'Account edit balance change',
+          );
+        }
+
+        final updated = existing.copyWith(
+          name: name,
+          group: _selectedGroup,
+          balance: balanceChanged ? balance : existing.balance,
+          includeInNetWorth: _includeInNetWorth,
+          updatedAt: now,
+        );
+        await ref.read(accountsProvider.notifier).updateAccount(updated);
+      } else {
+        final newAcc = AccountModel(
+          id: const Uuid().v4(),
+          name: name,
+          group: _selectedGroup,
+          balance: balance,
+          includeInNetWorth: _includeInNetWorth,
+          iconCodePoint: _selectedGroup.iconData.codePoint,
+          colorValue: _selectedGroup.isLiability ? 0xFFFF5E57 : 0xFF2E86DE,
+          createdAt: now,
+          updatedAt: now,
+        );
+        await ref.read(accountsProvider.notifier).addAccount(newAcc);
+      }
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save account: $e')),
+        );
+      }
     }
-    Navigator.pop(context);
   }
 
-  void _delete() {
+  Future<void> _delete() async {
     if (widget.accountToEdit != null) {
-      ref.read(accountsProvider.notifier).deleteAccount(widget.accountToEdit!.id);
-      Navigator.pop(context);
+      try {
+        await ref.read(accountsProvider.notifier).deleteAccount(widget.accountToEdit!.id);
+        if (mounted) Navigator.pop(context);
+      } catch (e) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              backgroundColor: AppColors.darkCard,
+              title: const Text('Cannot Delete Account', style: TextStyle(color: AppColors.expense)),
+              content: Text(
+                e.toString().replaceAll('Exception: ', ''),
+                style: const TextStyle(color: AppColors.textPrimaryDark),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK', style: TextStyle(color: AppColors.expense)),
+                ),
+              ],
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -206,14 +253,22 @@ class _AdjustBalanceDialogState extends ConsumerState<AdjustBalanceDialog> {
     });
   }
 
-  void _applyAdjustment() {
+  Future<void> _applyAdjustment() async {
     final newBal = double.tryParse(_balanceController.text.trim()) ?? widget.account.balance;
-    ref.read(accountsProvider.notifier).adjustBalance(
-      accountId: widget.account.id,
-      newBalance: newBal,
-      note: _noteController.text.trim(),
-    );
-    Navigator.pop(context);
+    try {
+      await ref.read(accountsProvider.notifier).adjustBalance(
+        accountId: widget.account.id,
+        newBalance: newBal,
+        note: _noteController.text.trim(),
+      );
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to adjust balance: $e')),
+        );
+      }
+    }
   }
 
   @override
