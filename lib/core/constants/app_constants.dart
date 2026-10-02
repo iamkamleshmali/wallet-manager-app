@@ -5,7 +5,7 @@ class AppConstants {
 
   // GitHub OTA In-App Update Configuration
   static const String githubOwner = 'iamkamleshmali';
-  static const String githubRepo = 'wallet-manager-km';
+  static const String githubRepo = 'wallet-manager-app';
   static const String githubLatestReleaseUrl =
       'https://api.github.com/repos/$githubOwner/$githubRepo/releases/latest';
 
