@@ -5,6 +5,27 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def envKeystorePath = System.getenv("KEYSTORE_PATH")
+def envKeystorePassword = System.getenv("KEYSTORE_PASSWORD")
+def envKeyAlias = System.getenv("KEY_ALIAS")
+def envKeyPassword = System.getenv("KEY_PASSWORD")
+
+File keystoreFile = null
+if (envKeystorePath != null && !envKeystorePath.trim().isEmpty()) {
+    def f1 = rootProject.file(envKeystorePath)
+    def f2 = file(envKeystorePath)
+    def f3 = new File(envKeystorePath)
+    if (f1.exists()) {
+        keystoreFile = f1
+    } else if (f2.exists()) {
+        keystoreFile = f2
+    } else if (f3.exists()) {
+        keystoreFile = f3
+    } else {
+        keystoreFile = file(envKeystorePath)
+    }
+}
+
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
 if (keystorePropertiesFile.exists()) {
@@ -35,7 +56,12 @@ android {
 
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists() && keystoreProperties['storeFile'] != null) {
+            if (envKeystorePath != null && !envKeystorePath.trim().isEmpty() && keystoreFile != null) {
+                storeFile = keystoreFile
+                storePassword = envKeystorePassword
+                keyAlias = envKeyAlias
+                keyPassword = envKeyPassword
+            } else if (keystorePropertiesFile.exists() && keystoreProperties['storeFile'] != null) {
                 keyAlias = keystoreProperties['keyAlias']
                 keyPassword = keystoreProperties['keyPassword']
                 storeFile = file(keystoreProperties['storeFile'])
