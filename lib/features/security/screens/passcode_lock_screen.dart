@@ -14,22 +14,33 @@ class PasscodeLockScreen extends StatefulWidget {
 class _PasscodeLockScreenState extends State<PasscodeLockScreen> {
   String _enteredPin = '';
   bool _isError = false;
+  bool _canUseBiometrics = false;
 
   @override
   void initState() {
     super.initState();
-    _tryBiometrics();
+    _initAuth();
+  }
+
+  Future<void> _initAuth() async {
+    final bioEnabled = await AuthService.instance.isBiometricEnabled();
+    final bioAvail = await AuthService.instance.isBiometricAvailable();
+    if (mounted) {
+      setState(() {
+        _canUseBiometrics = bioEnabled && bioAvail;
+      });
+    }
+    if (bioEnabled && bioAvail) {
+      await _tryBiometrics();
+    }
   }
 
   Future<void> _tryBiometrics() async {
-    final bioEnabled = await AuthService.instance.isBiometricEnabled();
-    if (bioEnabled) {
-      final success = await AuthService.instance.authenticateWithBiometrics(
-        reason: 'Authenticate to open Wallet Manager',
-      );
-      if (success) {
-        widget.onUnlocked();
-      }
+    final success = await AuthService.instance.authenticateWithBiometrics(
+      reason: 'Authenticate to open Wallet Manager',
+    );
+    if (success && mounted) {
+      widget.onUnlocked();
     }
   }
 
@@ -137,10 +148,12 @@ class _PasscodeLockScreenState extends State<PasscodeLockScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Biometric button
-                      IconButton(
-                        icon: const Icon(Icons.fingerprint_rounded, size: 32, color: AppColors.income),
-                        onPressed: _tryBiometrics,
-                      ),
+                      _canUseBiometrics
+                          ? IconButton(
+                              icon: const Icon(Icons.fingerprint_rounded, size: 32, color: AppColors.income),
+                              onPressed: _tryBiometrics,
+                            )
+                          : const SizedBox(width: 48, height: 48),
                       _buildKeyButton('0'),
                       // Delete button
                       IconButton(
