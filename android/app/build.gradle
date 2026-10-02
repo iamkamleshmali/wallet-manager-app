@@ -1,5 +1,3 @@
-import org.gradle.api.GradleException
-
 plugins {
     id "com.android.application"
     id "kotlin-android"
@@ -48,7 +46,7 @@ android {
                     def errorMsg = "❌ Keystore file not found at: '${keystoreFile.absolutePath}' (KEYSTORE_PATH='${keystorePath}'). Please ensure KEYSTORE_BASE64 is properly configured."
                     logger.error(errorMsg)
                     println(errorMsg)
-                    throw new GradleException(errorMsg)
+                    throw new FileNotFoundException(errorMsg)
                 }
                 storeFile = keystoreFile
                 storePassword = envKeystorePassword
@@ -63,7 +61,7 @@ android {
                     def errorMsg = "❌ Keystore file '${keystoreProperties['storeFile']}' defined in key.properties not found."
                     logger.error(errorMsg)
                     println(errorMsg)
-                    throw new GradleException(errorMsg)
+                    throw new FileNotFoundException(errorMsg)
                 }
                 keyAlias = keystoreProperties['keyAlias']
                 keyPassword = keystoreProperties['keyPassword']
