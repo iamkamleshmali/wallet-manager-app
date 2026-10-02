@@ -1,4 +1,4 @@
-name: Build APK
+name: Build & Release Flutter APK
 
 on:
   push:
@@ -16,56 +16,69 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    permissions:
-      contents: write
+
     steps:
-      - name: Code download
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Node setup
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Java setup
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 17
 
-      - name: Web files ko www folder mein rakho
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Verify Flutter installation
+        run: flutter doctor -v
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Configure Keystore signing (if secrets provided)
+        if: env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          mkdir -p www
-          cp index.html manifest.json sw.js www/
-          cp icon-192.png icon-512.png www/
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          cat <<EOF > android/key.properties
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
 
-      - name: Capacitor install
-        run: |
-          npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+      - name: Build Flutter Release APK
+        run: flutter build apk --release
 
-      - name: Android project banao
-        run: |
-          [ -f "capacitor.config.json" ] || npx cap init "Wallet Manager" com.kamlesh.moneymanager --web-dir www
-          [ -d "android" ] || npx cap add android
-          npx cap sync android
-
-      - name: APK build karo
-        working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: APK upload karo
+      - name: Upload APK build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: money-manager-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: money-manager-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Create Release
+      - name: Publish GitHub Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v1.0.${{ github.run_number }}"
           name: "Release v1.0.${{ github.run_number }}"
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          body: |
+            ### 🚀 Money Manager Release v1.0.${{ github.run_number }}
+            
+            #### Highlights & Features:
+            - **Pixel-perfect Realbyte Money Manager dark theme** (#1E2024 / #18191C, card #26282E)
+            - **Offline-first SQLite relational ledger** with double-entry balance sheet logic
+            - **Interactive fl_chart donut analytics** and net worth trajectory curve
+            - **Google Drive AppData cloud backup & restore**
+            - **OTA In-App Force-Update engine**: directly downloads and installs updates
+            - **CalcBox & Excel/CSV export & import**
+          files: build/app/outputs/flutter-apk/app-release.apk
+          generate_release_notes: true

@@ -1,5 +1,18 @@
-include ':app'
-include ':capacitor-cordova-android-plugins'
-project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
+include ":app"
 
-apply from: 'capacitor.settings.gradle'
+def localPropertiesFile = new File(rootProject.projectDir, "local.properties")
+def properties = new Properties()
+
+def flutterSdkPath = System.getenv("FLUTTER_ROOT")
+
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader("UTF-8") { reader -> properties.load(reader) }
+    def localPath = properties.getProperty("flutter.sdk")
+    if (localPath != null) {
+        flutterSdkPath = localPath
+    }
+}
+
+if (flutterSdkPath != null) {
+    apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+}

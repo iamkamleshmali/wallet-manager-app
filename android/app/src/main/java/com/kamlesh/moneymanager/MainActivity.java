@@ -1,5 +1,7 @@
 package com.kamlesh.moneymanager;
 
-import com.getcapacitor.BridgeActivity;
+import io.flutter.embedding.android.FlutterFragmentActivity;
 
-public class MainActivity extends BridgeActivity {}
+public class MainActivity extends FlutterFragmentActivity {
+    // Extending FlutterFragmentActivity is required for local_auth biometric authentication
+}

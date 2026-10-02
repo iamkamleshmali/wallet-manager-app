@@ -1,0 +1,8 @@
+# Android Release Keystore Configuration
+# Copy this file to android/key.properties and replace with your actual keystore credentials.
+# Do NOT commit your actual key.properties or .jks file to public version control.
+
+storePassword=YourKeystorePasswordHere
+keyPassword=YourKeyPasswordHere
+keyAlias=upload
+storeFile=upload-keystore.jks
