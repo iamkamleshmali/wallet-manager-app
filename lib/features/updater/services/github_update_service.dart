@@ -6,7 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../core/constants/app_constants.dart';
+import 'package:wallet_manager/core/constants/app_constants.dart';
 import '../models/github_release_model.dart';
 
 class GithubUpdateService {
