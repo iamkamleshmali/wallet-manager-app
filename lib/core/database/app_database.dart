@@ -118,7 +118,7 @@ class AppDatabase {
     await db.execute('CREATE INDEX idx_trans_datetime ON transactions (date_time)');
     await db.execute('CREATE INDEX idx_trans_account ON transactions (account_id)');
 
-    // Seed default categories
+    // Seed default categories for expense and income
     for (final cat in CategoryModel.defaultExpenseCategories) {
       await db.insert('categories', cat.toMap());
     }
@@ -126,132 +126,8 @@ class AppDatabase {
       await db.insert('categories', cat.toMap());
     }
 
-    // Seed initial realistic accounts
-    final now = DateTime.now();
-    final defaultAccounts = [
-      AccountModel(
-        id: 'acc_cash',
-        name: 'Cash in Hand',
-        group: AccountGroup.cash,
-        balance: 3800.0,
-        iconCodePoint: Icons.payments_rounded.codePoint,
-        colorValue: 0xFF2ECC71,
-        sortOrder: 1,
-        createdAt: now,
-        updatedAt: now,
-      ),
-      AccountModel(
-        id: 'acc_bob_upi',
-        name: 'Bob Upi Ac',
-        group: AccountGroup.accounts,
-        balance: 38450.0,
-        iconCodePoint: Icons.account_balance_rounded.codePoint,
-        colorValue: 0xFF2E86DE,
-        sortOrder: 2,
-        createdAt: now,
-        updatedAt: now,
-      ),
-      AccountModel(
-        id: 'acc_savings',
-        name: 'HDFC Savings',
-        group: AccountGroup.accounts,
-        balance: 142500.0,
-        iconCodePoint: Icons.account_balance_rounded.codePoint,
-        colorValue: 0xFF00D2D3,
-        sortOrder: 3,
-        createdAt: now,
-        updatedAt: now,
-      ),
-      AccountModel(
-        id: 'acc_credit_card',
-        name: 'Credit Card',
-        group: AccountGroup.cards,
-        balance: -5420.0,
-        iconCodePoint: Icons.credit_card_rounded.codePoint,
-        colorValue: 0xFFFF5E57,
-        sortOrder: 4,
-        createdAt: now,
-        updatedAt: now,
-      ),
-      AccountModel(
-        id: 'acc_mutual_funds',
-        name: 'Mutual Funds & SIP',
-        group: AccountGroup.investments,
-        balance: 215000.0,
-        iconCodePoint: Icons.trending_up_rounded.codePoint,
-        colorValue: 0xFF5F27CD,
-        sortOrder: 5,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ];
-
-    for (final acc in defaultAccounts) {
-      await db.insert('accounts', acc.toMap());
-    }
-
-    // Seed realistic sample transactions for the current month
-    final sampleTrans = [
-      TransactionModel(
-        id: const Uuid().v4(),
-        type: TransactionType.income,
-        amount: 85000.0,
-        dateTime: DateTime(now.year, now.month, 1, 10, 30),
-        accountId: 'acc_bob_upi',
-        categoryId: 'cat_salary',
-        note: 'Monthly Salary Credit',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      TransactionModel(
-        id: const Uuid().v4(),
-        type: TransactionType.expense,
-        amount: 2200.0,
-        dateTime: DateTime(now.year, now.month, 2, 13, 15),
-        accountId: 'acc_bob_upi',
-        categoryId: 'cat_food',
-        note: 'Weekend Grocery & Cafe',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      TransactionModel(
-        id: const Uuid().v4(),
-        type: TransactionType.expense,
-        amount: 450.0,
-        dateTime: DateTime(now.year, now.month, 2, 17, 45),
-        accountId: 'acc_cash',
-        categoryId: 'cat_transport',
-        note: 'Metro & Auto rickshaw',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      TransactionModel(
-        id: const Uuid().v4(),
-        type: TransactionType.expense,
-        amount: 3200.0,
-        dateTime: DateTime(now.year, now.month, now.day > 3 ? now.day - 1 : 1, 20, 0),
-        accountId: 'acc_credit_card',
-        categoryId: 'cat_shopping',
-        note: 'Electronics store',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      TransactionModel(
-        id: const Uuid().v4(),
-        type: TransactionType.expense,
-        amount: 1450.0,
-        dateTime: DateTime(now.year, now.month, now.day, 11, 20),
-        accountId: 'acc_bob_upi',
-        categoryId: 'cat_bills',
-        note: 'Broadband Internet Fiber bill',
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ];
-
-    for (final tr in sampleTrans) {
-      await db.insert('transactions', tr.toMap());
-    }
+    // Fresh database starts completely empty (₹0 balances, no fake accounts, no demo transactions).
+    // The user creates their own real accounts and records their own ledger activity.
   }
 
   // Double-Entry Ledger Insert

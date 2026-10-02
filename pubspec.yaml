@@ -1,5 +1,5 @@
 name: wallet_manager
-description: "A pixel-perfect, high-performance Money Manager expense tracking app built with Flutter, SQLite offline-first ledger, Google Drive sync, and GitHub Releases OTA in-app updater."
+description: "A pixel-perfect, high-performance Wallet Manager personal finance app built with Flutter, SQLite offline-first ledger, Google Drive sync, and GitHub Releases OTA in-app updater."
 publish_to: 'none'
 
 version: 1.0.1+2
@@ -48,9 +48,11 @@ dependencies:
   share_plus: ^10.0.2
   file_picker: ^8.1.2
 
-  # Utilities & Permissions
+  # Utilities, Permissions & Notifications
   shared_preferences: ^2.3.2
   permission_handler: ^11.3.1
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
   uuid: ^4.4.2
 
 dev_dependencies:

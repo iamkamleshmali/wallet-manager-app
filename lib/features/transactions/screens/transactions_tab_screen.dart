@@ -106,7 +106,8 @@ class TransactionsTabScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       appBar: AppBar(
-        titleSpacing: 0,
+        titleSpacing: 14,
+        elevation: 0,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -116,14 +117,14 @@ class TransactionsTabScreen extends ConsumerWidget {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 8),
             GestureDetector(
               onTap: () => _showMonthYearPicker(context, ref, transState.selectedDate),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.darkCard,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: AppColors.darkBorder),
                 ),
                 child: Row(
@@ -132,17 +133,18 @@ class TransactionsTabScreen extends ConsumerWidget {
                     Text(
                       DateFormatters.formatMonthYear(transState.selectedDate),
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimaryDark,
                       ),
                     ),
-                    const Icon(Icons.arrow_drop_down_rounded, size: 18, color: AppColors.textSecondaryDark),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_drop_down_rounded, size: 20, color: AppColors.textSecondaryDark),
                   ],
                 ),
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.chevron_right_rounded, size: 28),
               onPressed: notifier.nextMonth,
@@ -178,15 +180,16 @@ class TransactionsTabScreen extends ConsumerWidget {
               );
             },
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
         ],
       ),
       body: Column(
         children: [
+          const SizedBox(height: 6),
           // Sub-Tabs: Daily, Calendar, Weekly, Monthly, Total, Note
           Container(
             height: 38,
-            margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: TransSubTab.values.length,
@@ -206,7 +209,7 @@ class TransactionsTabScreen extends ConsumerWidget {
                   selected: isSelected,
                   selectedColor: AppColors.expense,
                   backgroundColor: AppColors.darkCard,
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
@@ -220,6 +223,7 @@ class TransactionsTabScreen extends ConsumerWidget {
               },
             ),
           ),
+          const SizedBox(height: 4),
 
           // Income / Expenses / Total summary bar
           SummaryHeaderBar(
@@ -227,6 +231,7 @@ class TransactionsTabScreen extends ConsumerWidget {
             expense: transState.totalExpense,
             total: transState.netTotal,
           ),
+          const SizedBox(height: 6),
 
           // Main Sub-Tab View Content
           Expanded(

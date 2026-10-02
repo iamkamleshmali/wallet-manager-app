@@ -46,6 +46,13 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.jks
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.jks
 
+      - name: Print Release Certificate Fingerprint (Safe SHA-1 diagnostic)
+        run: |
+          echo "=================================================="
+          echo "🔍 RELEASE CERTIFICATE SHA-1 FINGERPRINT:"
+          keytool -list -v -keystore release.jks -alias "${{ secrets.KEY_ALIAS }}" -storepass "${{ secrets.KEYSTORE_PASSWORD }}" | grep -E "SHA1:|SHA256:" || true
+          echo "=================================================="
+
       - name: Build Flutter Release APK
         env:
           KEYSTORE_PATH: release.jks
@@ -57,7 +64,7 @@ jobs:
       - name: Upload APK build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: money-manager-release-apk
+          name: wallet-manager-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Publish GitHub Release
@@ -67,14 +74,16 @@ jobs:
           tag_name: "v1.0.${{ github.run_number }}"
           name: "Release v1.0.${{ github.run_number }}"
           body: |
-            ### 🚀 Money Manager Release v1.0.${{ github.run_number }}
+            ### 🚀 Wallet Manager Release v1.0.${{ github.run_number }}
             
             #### Highlights & Features:
-            - **Pixel-perfect Realbyte Money Manager dark theme** (#1E2024 / #18191C, card #26282E)
+            - **Official Wallet Manager Coral Branding & White Line-Art Wallet Logo**
+            - **Fresh install start ₹0 clean** (no dummy accounts or fake transactions)
             - **Offline-first SQLite relational ledger** with double-entry balance sheet logic
-            - **Interactive fl_chart donut analytics** and net worth trajectory curve
+            - **Strictly tailored for Indian Rupees (₹ INR)**
+            - **Interactive fl_chart donut analytics** and dynamic net worth trajectory
             - **Google Drive AppData cloud backup & restore**
-            - **OTA In-App Force-Update engine**: directly downloads and installs updates
+            - **OTA In-App Updater** directly checking GitHub Releases
             - **CalcBox & Excel/CSV export & import**
           files: build/app/outputs/flutter-apk/app-release.apk
           generate_release_notes: true

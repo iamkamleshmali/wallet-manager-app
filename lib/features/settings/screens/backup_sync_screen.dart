@@ -67,6 +67,31 @@ class _BackupSyncScreenState extends ConsumerState<BackupSyncScreen> {
     final result = await FilePicker.platform.pickFiles();
     if (result == null || result.files.single.path == null) return;
 
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.darkCard,
+        title: const Text('Restore from Backup?'),
+        content: const Text(
+          'Importing this backup will replace current records. Are you sure you want to proceed?',
+          style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondaryDark)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.expense),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Restore', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     setState(() => _isLoading = true);
     try {
       final pickedFile = File(result.files.single.path!);
@@ -113,6 +138,31 @@ class _BackupSyncScreenState extends ConsumerState<BackupSyncScreen> {
   }
 
   Future<void> _restoreFromGoogleDrive() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.darkCard,
+        title: const Text('Restore from Cloud?'),
+        content: const Text(
+          'Restoring from Google Drive will replace your local transactions with the cloud backup. Do you want to proceed?',
+          style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondaryDark)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.expense),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Restore', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     setState(() => _isLoading = true);
     try {
       final success = await GoogleDriveBackupService.instance.restoreBackupFromDrive();
@@ -195,8 +245,28 @@ class _BackupSyncScreenState extends ConsumerState<BackupSyncScreen> {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
                               onPressed: () async {
-                                await GoogleDriveBackupService.instance.signIn();
-                                setState(() {});
+                                setState(() => _isLoading = true);
+                                try {
+                                  final user = await GoogleDriveBackupService.instance.signIn();
+                                  if (user == null && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Google Sign-In was cancelled or requires Google Cloud OAuth registration with SHA-1.',
+                                        ),
+                                        duration: Duration(seconds: 4),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Sign in failed: $e')),
+                                    );
+                                  }
+                                } finally {
+                                  if (mounted) setState(() => _isLoading = false);
+                                }
                               },
                               child: const Text('Sign In'),
                             )

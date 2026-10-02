@@ -254,7 +254,7 @@ class ForceUpdateDialog extends ConsumerWidget {
 
               const SizedBox(height: 10),
               const Text(
-                'Please update to continue using Money Manager seamlessly.',
+                'Please update to continue using Wallet Manager seamlessly.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textMutedDark,

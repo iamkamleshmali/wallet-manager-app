@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../updater/providers/update_provider.dart';
@@ -16,6 +17,28 @@ class AboutScreen extends ConsumerStatefulWidget {
 class _AboutScreenState extends ConsumerState<AboutScreen> {
   bool _isChecking = false;
   String? _statusMessage;
+  String? _installedVersion;
+  String? _installedBuildNumber;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackageInfo();
+  }
+
+  Future<void> _loadPackageInfo() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _installedVersion = info.version;
+          _installedBuildNumber = info.buildNumber;
+        });
+      }
+    } catch (_) {
+      // Fallback
+    }
+  }
 
   Future<void> _checkForUpdates() async {
     setState(() {
@@ -61,11 +84,15 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.expense,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF7043), Color(0xFFFF3D3D)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.expense.withOpacity(0.35),
+                    color: const Color(0xFFFF5745).withOpacity(0.35),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -77,7 +104,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
           const SizedBox(height: 16),
           const Center(
             child: Text(
-              'Money Manager',
+              'Wallet Manager',
               style: TextStyle(
                 color: AppColors.textPrimaryDark,
                 fontSize: 22,
@@ -87,10 +114,12 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          const Center(
+          Center(
             child: Text(
-              'Version ${AppConstants.currentVersion} (Build ${AppConstants.currentVersionCode})',
-              style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 13),
+              _installedVersion != null
+                  ? 'Version $_installedVersion (Build $_installedBuildNumber)'
+                  : 'Version ${AppConstants.currentVersion} (Build ${AppConstants.currentVersionCode})',
+              style: const TextStyle(color: AppColors.textSecondaryDark, fontSize: 13),
             ),
           ),
           const SizedBox(height: 32),

@@ -47,7 +47,7 @@ class CsvService {
 
     String csvData = const ListToCsvConverter().convert(rows);
     final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/money_manager_transactions_${DateTime.now().millisecondsSinceEpoch}.csv');
+    final file = File('${tempDir.path}/wallet_manager_transactions_${DateTime.now().millisecondsSinceEpoch}.csv');
     await file.writeAsString(csvData);
     return file.path;
   }

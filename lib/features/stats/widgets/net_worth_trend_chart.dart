@@ -13,20 +13,35 @@ class NetWorthTrendChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Generate realistic trailing trajectory points leading to currentNetWorth
-    final base = currentNetWorth * 0.75;
-    final step = (currentNetWorth - base) / 5;
+    // Generate 6 trailing month labels dynamically based on current date
+    final now = DateTime.now();
+    final List<String> months = [];
+    final List<String> monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    for (int i = 5; i >= 0; i--) {
+      final d = DateTime(now.year, now.month - i, 1);
+      months.add(monthNames[d.month - 1]);
+    }
 
-    final spots = [
-      FlSpot(0, base),
-      FlSpot(1, base + step * 0.8),
-      FlSpot(2, base + step * 1.5),
-      FlSpot(3, base + step * 2.2),
-      FlSpot(4, base + step * 3.4),
-      FlSpot(5, currentNetWorth),
-    ];
+    final double base = currentNetWorth == 0 ? 0 : currentNetWorth * 0.75;
+    final double step = currentNetWorth == 0 ? 0 : (currentNetWorth - base) / 5;
 
-    final months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+    final spots = currentNetWorth == 0
+        ? [
+            const FlSpot(0, 0),
+            const FlSpot(1, 0),
+            const FlSpot(2, 0),
+            const FlSpot(3, 0),
+            const FlSpot(4, 0),
+            const FlSpot(5, 0),
+          ]
+        : [
+            FlSpot(0, base),
+            FlSpot(1, base + step * 0.8),
+            FlSpot(2, base + step * 1.5),
+            FlSpot(3, base + step * 2.2),
+            FlSpot(4, base + step * 3.4),
+            FlSpot(5, currentNetWorth),
+          ];
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -49,21 +64,22 @@ class NetWorthTrendChart extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.income.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  '+12.4% 6M',
-                  style: TextStyle(
-                    color: AppColors.incomeLight,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+              if (currentNetWorth > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.income.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    '+12.4% 6M',
+                    style: TextStyle(
+                      color: AppColors.incomeLight,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 18),

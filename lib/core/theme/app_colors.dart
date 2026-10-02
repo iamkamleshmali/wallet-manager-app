@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Dark Mode Theme (Realbyte Money Manager Aesthetic)
+  // Dark Mode Theme (Wallet Manager Aesthetic)
   static const Color darkBackground = Color(0xFF1E2024);
   static const Color darkBackgroundDeep = Color(0xFF18191C);
   static const Color darkCard = Color(0xFF26282E);

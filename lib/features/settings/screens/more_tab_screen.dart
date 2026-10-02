@@ -66,7 +66,7 @@ class MoreTabScreen extends StatelessWidget {
       _MenuItem(
         icon: Icons.tune_rounded,
         title: 'Configuration',
-        subtitle: 'Currency & Categories',
+        subtitle: 'INR (₹) & Reminders',
         color: AppColors.income,
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ConfigurationScreen())),
       ),
@@ -189,7 +189,7 @@ class MoreTabScreen extends StatelessWidget {
           const SizedBox(height: 32),
           const Center(
             child: Text(
-              'Money Manager • High Performance Ledger\nOffline-First SQLite • Google Drive Sync',
+              'Wallet Manager • Double-Entry Money Manager\nOffline-First SQLite • 100% Private Ledger',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.textMutedDark,
