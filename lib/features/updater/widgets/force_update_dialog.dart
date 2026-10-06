@@ -29,10 +29,10 @@ class ForceUpdateDialog extends ConsumerWidget {
     return '${mb.toStringAsFixed(1)} MB';
   }
 
-  Future<void> _launchApkDownload(BuildContext context) async {
-    final apkUrl = release.apkDownloadUrl ??
-        'https://github.com/${AppConstants.githubOwner}/${AppConstants.githubRepo}/releases/latest';
-    final uri = Uri.tryParse(apkUrl);
+  Future<void> _launchGitHubReleases(BuildContext context) async {
+    const releasesUrl =
+        'https://github.com/${AppConstants.githubOwner}/${AppConstants.githubRepo}/releases';
+    final uri = Uri.tryParse(releasesUrl);
     if (uri != null) {
       final launched = await launchUrl(
         uri,
@@ -41,7 +41,7 @@ class ForceUpdateDialog extends ConsumerWidget {
       if (!launched && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Could not open download URL.'),
+            content: Text('Could not open GitHub Releases page.'),
           ),
         );
       }
@@ -240,7 +240,7 @@ class ForceUpdateDialog extends ConsumerWidget {
                     ),
                   ),
                   onPressed: () {
-                    _launchApkDownload(context);
+                    _launchGitHubReleases(context);
                   },
                   child: const Text(
                     'Update Now',
