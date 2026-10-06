@@ -153,6 +153,8 @@ export default function Navbar() {
             {/* Direct APK Download Button */}
             <a
               href={apkUrl}
+              download="app-release.apk"
+              rel="noopener noreferrer"
               onClick={() => triggerDownloadConfetti()}
               className="relative group flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-coral-600 dark:bg-white dark:text-coral-600 font-bold text-xs shadow-md hover:shadow-xl hover:scale-102 active:scale-98 transition-all duration-200"
             >
@@ -212,6 +214,8 @@ export default function Navbar() {
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
                 <a
                   href={apkUrl}
+                  download="app-release.apk"
+                  rel="noopener noreferrer"
                   onClick={() => {
                     triggerDownloadConfetti();
                     setMobileMenuOpen(false);

@@ -13,6 +13,14 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Queries for url_launcher on Android 11+ -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+
     <application
         android:label="Wallet Manager"
         android:name="${applicationName}"

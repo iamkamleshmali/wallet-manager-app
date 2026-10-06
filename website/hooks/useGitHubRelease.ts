@@ -17,16 +17,19 @@ export interface GitHubReleaseInfo {
   isFallback: boolean;
 }
 
+const GITHUB_OWNER = "iamkamleshmali";
+const GITHUB_REPO = "wallet-manager-app";
+
 const DEFAULT_RELEASE: GitHubReleaseInfo = {
-  tagName: "v1.2.0",
-  releaseName: "Wallet Manager 1.2.0 — Google Drive Sync & SQLite Backup",
+  tagName: "v1.0.36",
+  releaseName: "Wallet Manager v1.0.36 — Double-Entry Ledger & Cloud Sync",
   publishedAt: "Latest Stable",
-  apkUrl: "https://github.com/iamkamleshmali/wallet-manager-km/releases/latest",
-  apkName: "wallet-manager-release.apk",
-  apkSizeMb: "24.6 MB",
+  apkUrl: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest/download/app-release.apk`,
+  apkName: "app-release.apk",
+  apkSizeMb: "30.3 MB",
   totalDownloads: 1420,
-  releaseNotes: "• Added encrypted Google Drive AppData sync\n• SQLite local database export & import\n• Reinforced multi-account balance sheets\n• High-performance interactive donut statistics",
-  htmlUrl: "https://github.com/iamkamleshmali/wallet-manager-km/releases/latest",
+  releaseNotes: "• Encrypted Google Drive AppData sync\n• SQLite local database export & import\n• Reinforced multi-account balance sheets\n• High-performance interactive donut statistics",
+  htmlUrl: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`,
   isLoading: false,
   isError: false,
   isFallback: true,
@@ -44,7 +47,7 @@ export function useGitHubRelease() {
     async function fetchRelease() {
       try {
         const response = await fetch(
-          "https://api.github.com/repos/iamkamleshmali/wallet-manager-km/releases/latest",
+          `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`,
           {
             headers: {
               Accept: "application/vnd.github.v3+json",
@@ -67,7 +70,7 @@ export function useGitHubRelease() {
 
         const sizeInMb = apkAsset?.size
           ? (apkAsset.size / (1024 * 1024)).toFixed(1) + " MB"
-          : "24.6 MB";
+          : "30.3 MB";
 
         const formattedDate = data.published_at
           ? new Date(data.published_at).toLocaleDateString("en-US", {
@@ -84,15 +87,18 @@ export function useGitHubRelease() {
             0
           ) || 1420;
 
+        const tagName = data.tag_name || "v1.0.36";
+        const assetName = apkAsset?.name || "app-release.apk";
+        const directApkUrl =
+          apkAsset?.browser_download_url ||
+          `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/download/${tagName}/${assetName}`;
+
         setRelease({
-          tagName: data.tag_name || "v1.2.0",
-          releaseName: data.name || `Release ${data.tag_name || "v1.2.0"}`,
+          tagName: tagName,
+          releaseName: data.name || `Release ${tagName}`,
           publishedAt: formattedDate,
-          apkUrl:
-            apkAsset?.browser_download_url ||
-            data.html_url ||
-            DEFAULT_RELEASE.apkUrl,
-          apkName: apkAsset?.name || "wallet-manager-release.apk",
+          apkUrl: directApkUrl,
+          apkName: assetName,
           apkSizeMb: sizeInMb,
           totalDownloads: downloadCount,
           releaseNotes: data.body || DEFAULT_RELEASE.releaseNotes,

@@ -112,6 +112,8 @@ export default function Hero() {
               {/* Direct APK Download CTA */}
               <a
                 href={apkUrl}
+                download="app-release.apk"
+                rel="noopener noreferrer"
                 onClick={handleDownload}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white text-coral-600 font-extrabold text-base shadow-xl hover:shadow-2xl hover:scale-105 active:scale-98 transition-all duration-200 group"
                 id="hero-download-btn"

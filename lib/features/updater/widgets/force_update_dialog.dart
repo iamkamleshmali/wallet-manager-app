@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../models/github_release_model.dart';
@@ -26,6 +27,25 @@ class ForceUpdateDialog extends ConsumerWidget {
     if (bytes <= 0) return '0 MB';
     final mb = bytes / (1024 * 1024);
     return '${mb.toStringAsFixed(1)} MB';
+  }
+
+  Future<void> _launchApkDownload(BuildContext context) async {
+    final apkUrl = release.apkDownloadUrl ??
+        'https://github.com/${AppConstants.githubOwner}/${AppConstants.githubRepo}/releases/latest';
+    final uri = Uri.tryParse(apkUrl);
+    if (uri != null) {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open download URL.'),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -219,36 +239,17 @@ class ForceUpdateDialog extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  onPressed: updateState.status == UpdateStatus.downloading
-                      ? null
-                      : () {
-                          if (updateState.status == UpdateStatus.downloaded) {
-                            ref.read(updateProvider.notifier).installExistingDownload();
-                          } else {
-                            ref.read(updateProvider.notifier).startDownloadAndInstall();
-                          }
-                        },
-                  child: updateState.status == UpdateStatus.downloading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          updateState.status == UpdateStatus.downloaded
-                              ? 'Install Update'
-                              : updateState.status == UpdateStatus.error
-                                  ? 'Retry Update'
-                                  : 'Update Now',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
+                  onPressed: () {
+                    _launchApkDownload(context);
+                  },
+                  child: const Text(
+                    'Update Now',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
                 ),
               ),
 

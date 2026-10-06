@@ -11,6 +11,8 @@ export default function MobileStickyDownload() {
     <div className="fixed bottom-4 left-4 right-4 z-40 sm:hidden">
       <a
         href={apkUrl}
+        download="app-release.apk"
+        rel="noopener noreferrer"
         onClick={() => triggerDownloadConfetti()}
         className="flex items-center justify-between px-5 py-3.5 rounded-2xl bg-gradient-to-r from-coral-500 to-warmOrange-500 text-white font-extrabold text-sm shadow-2xl border border-white/20 active:scale-95 transition-transform"
       >

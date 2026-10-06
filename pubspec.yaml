@@ -37,6 +37,7 @@ dependencies:
   dio: ^5.7.0
   open_filex: ^4.5.0
   package_info_plus: ^8.0.2
+  url_launcher: ^6.3.0
 
   # Cloud Backup & Google Drive Integration
   google_sign_in: ^6.2.1

@@ -147,6 +147,8 @@ export default function Footer() {
                 </div>
                 <a
                   href={apkUrl}
+                  download="app-release.apk"
+                  rel="noopener noreferrer"
                   onClick={() => triggerDownloadConfetti()}
                   className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-gradient-to-r from-coral-500 to-warmOrange-500 text-white font-bold text-xs shadow-md hover:scale-102 transition-all"
                 >
